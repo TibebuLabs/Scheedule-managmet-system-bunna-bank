@@ -1,0 +1,751 @@
+/* Sidebar.css - Modern & Responsive */
+
+:root {
+  --sidebar-bg:rgb(31,41,55);
+  --sidebar-light:rgb(31,41,55);
+  --sidebar-dark: rgb(31,41,55);
+  --sidebar-accent: #FFD700;
+  --sidebar-text: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  
+  /* Animation speeds */
+  --sidebar-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-delay: 0.1s;
+}
+
+/* Main Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: linear-gradient(180deg, 
+    var(--sidebar-bg) 0%,
+    var(--sidebar-light) 50%,
+    var(--sidebar-dark) 100%);
+  border-right: 1px solid var(--sidebar-border);
+  z-index: 1001;
+  transition: all var(--sidebar-transition);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset -1px 0 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transform-origin: left center;
+}
+
+/* Desktop Sizes */
+.sidebar.desktop.open {
+  width: 280px;
+  min-width: 280px;
+}
+
+.sidebar.desktop.collapsed {
+  width: 90px;
+  min-width: 90px;
+}
+
+/* Mobile/Tablet Sizes */
+.sidebar.mobile {
+  width: 300px;
+  min-width: 300px;
+  transform: translateX(-100%);
+  box-shadow: none;
+}
+
+.sidebar.mobile.open {
+  transform: translateX(0);
+  box-shadow: 
+    0 0 60px rgba(0, 0, 0, 0.5),
+    0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgb(245,248,251) 0%,
+    rgb(245,248,251) 100%);
+  min-height: 80px;
+}
+
+/* Logo Container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  gap: 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all var(--sidebar-transition);
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.logo:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Logo Image Container */
+.logo-icon-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+  padding: 4px;
+}
+
+/* .bunna-bank-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: all var(--sidebar-transition);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+} */
+
+.bunna-bank-logo {
+  width: 200%; /* Increased from 100% */
+  height: 200%; /* Increased from 100% */
+  object-fit: contain;
+  border-radius: 10px;
+  transition: all var(--sidebar-transition);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transform: scale(1.2); /* Add this to make it bigger */
+}
+
+/* For collapsed state */
+.sidebar.desktop.collapsed .bunna-bank-logo {
+  transform: scale(1.1); /* Slightly smaller in collapsed state */
+}
+/* Logo Glow Effect */
+.logo-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--sidebar-accent) 0%, #FFA500 100%);
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.3;
+  animation: pulse 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+/* Logo Text */
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo-text h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--sidebar-text);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.logo-text p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Toggle Button - Desktop */
+.sidebar-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--sidebar-transition);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-toggle:hover {
+  background: linear-gradient(135deg, var(--sidebar-accent) 0%, #FFA500 100%);
+  color: var(--sidebar-bg);
+  transform: scale(1.1) rotate(180deg);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+}
+
+.toggle-icon {
+  font-size: 1.5rem;
+  font-weight: 700;
+  transition: all var(--sidebar-transition);
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+/* Mobile Close Button */
+.sidebar-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--sidebar-transition);
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.close-icon {
+  line-height: 1;
+}
+
+/* Collapsed State */
+.sidebar.desktop.collapsed .logo-text,
+.sidebar.desktop.collapsed .user-info {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sidebar.desktop.collapsed .logo {
+  padding: 0.5rem;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.sidebar.desktop.collapsed .logo:hover {
+  transform: scale(1.1);
+}
+
+.sidebar.desktop.collapsed .logo-image-container {
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+}
+
+.sidebar.desktop.collapsed .bunna-bank-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sidebar.desktop.collapsed .sidebar-toggle {
+  position: absolute;
+  right: -18px;
+  top: 2rem;
+  transform: none;
+  background: linear-gradient(135deg, 
+    var(--sidebar-dark) 0%, 
+    var(--sidebar-bg) 100%);
+  border: 2px solid var(--sidebar-accent);
+  color: var(--sidebar-accent);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+.sidebar.desktop.collapsed .sidebar-toggle:hover {
+  right: -20px;
+  transform: scale(1.15) rotate(180deg);
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--sidebar-border);
+  background: linear-gradient(180deg, 
+    transparent 0%,
+    rgba(84, 23, 24, 0.5) 100%);
+}
+
+/* User Profile */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 16px;
+  transition: all var(--sidebar-transition);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-profile:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Avatar */
+.avatar-container {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sidebar-accent) 0%, #FFA500 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sidebar-bg);
+  font-weight: 800;
+  font-size: 1.25rem;
+  box-shadow: 
+    0 4px 12px rgba(255, 215, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 2;
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
+  border: 2px solid var(--sidebar-dark);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  z-index: 3;
+  animation: pulse 2s infinite;
+}
+
+/* User Info */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.user-info h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sidebar-text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-info p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tooltip for collapsed state */
+.user-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--sidebar-dark);
+  color: var(--sidebar-text);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--sidebar-transition);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.user-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent var(--sidebar-dark) transparent transparent;
+}
+
+.user-profile:hover .user-tooltip {
+  opacity: 1;
+  left: calc(100% + 20px);
+}
+
+/* Mobile Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  margin: 4px 0;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    rgba(255, 215, 0, 0.3) 0%, 
+    rgba(255, 165, 0, 0.3) 100%);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, 
+    rgba(255, 215, 0, 0.5) 0%, 
+    rgba(255, 165, 0, 0.5) 100%);
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .sidebar.desktop.open {
+    width: 260px;
+    min-width: 260px;
+  }
+  
+  .sidebar.desktop.collapsed {
+    width: 85px;
+    min-width: 85px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .sidebar.mobile {
+    width: 280px;
+    min-width: 280px;
+  }
+  
+  .sidebar-header {
+    padding: 1rem;
+    min-height: 70px;
+  }
+  
+  .logo {
+    padding: 0.375rem;
+  }
+  
+  .logo-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .logo-image-container {
+    width: 40px;
+    height: 40px;
+    padding: 3px;
+  }
+  
+  .logo-text h2 {
+    font-size: 1.25rem;
+  }
+  
+  .avatar-container {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .avatar {
+    font-size: 1.1rem;
+  }
+  
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .sidebar.mobile {
+    width: 260px;
+    min-width: 260px;
+  }
+  
+  .sidebar-header {
+    padding: 0.875rem;
+  }
+  
+  .logo-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .logo-image-container {
+    width: 36px;
+    height: 36px;
+    padding: 2px;
+  }
+  
+  .logo-text h2 {
+    font-size: 1.125rem;
+  }
+  
+  .menu-list {
+    padding: 0 0.75rem;
+  }
+  
+  .sidebar-footer {
+    padding: 1rem;
+  }
+}
+
+/* Accessibility */
+.sidebar-toggle:focus,
+.sidebar-close:focus,
+.user-profile:focus {
+  outline: 2px solid var(--sidebar-accent);
+  outline-offset: 2px;
+}
+
+/* Light Mode Support */
+.sidebar.light {
+  background: linear-gradient(180deg, 
+    #f8fafc 0%,
+    #f1f5f9 50%,
+    #e2e8f0 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-text: #1e293b;
+}
+
+.sidebar.light .logo-text h2 {
+  color: #1e293b;
+  text-shadow: none;
+}
+
+.sidebar.light .logo-text p {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sidebar.light .logo {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.light .logo:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar.light .sidebar-toggle {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.05) 0%, 
+    rgba(0, 0, 0, 0.02) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sidebar.light .sidebar-toggle:hover {
+  background: linear-gradient(135deg, var(--sidebar-accent) 0%, #FFA500 100%);
+  color: white;
+}
+
+.sidebar.light .sidebar-close {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sidebar.light .sidebar-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.light .user-profile {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.light .user-profile:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar.light .user-info h4 {
+  color: #1e293b;
+}
+
+.sidebar.light .user-info p {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sidebar.light .user-tooltip {
+  background: #f3f4f6;
+  color: #1e293b;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.light .user-tooltip::before {
+  border-color: transparent #f3f4f6 transparent transparent;
+}
+
+.sidebar.light .sidebar-footer {
+  background: linear-gradient(180deg, 
+    transparent 0%,
+    rgba(248, 250, 252, 0.5) 100%);
+}
+
+/* Logo Image Adjustments for collapsed state */
+.sidebar.desktop.collapsed .bunna-bank-logo {
+  transform: scale(0.9);
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-toggle,
+  .user-profile,
+  .logo,
+  .logo-glow,
+  .status-indicator {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .sidebar.mobile.open {
+    animation: none;
+  }
+}

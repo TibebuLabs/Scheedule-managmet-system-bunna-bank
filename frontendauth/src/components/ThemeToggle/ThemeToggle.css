@@ -1,0 +1,148 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.toggle-track {
+  width: 48px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  position: relative;
+  transition: all var(--transition-base);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle.dark .toggle-track {
+  background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background-color: white;
+  transition: transform var(--transition-base) var(--transition-bounce);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle.dark .toggle-thumb {
+  transform: translateX(24px);
+  background-color: var(--gray-900);
+}
+
+.theme-toggle.animating .toggle-thumb {
+  animation: bounce 0.3s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(2px);
+  }
+  50% {
+    transform: translateX(26px);
+  }
+}
+
+.theme-toggle.dark.animating .toggle-thumb {
+  animation: bounceDark 0.3s;
+}
+
+@keyframes bounceDark {
+  0%, 100% {
+    transform: translateX(24px);
+  }
+  50% {
+    transform: translateX(0);
+  }
+}
+
+.sun-icon,
+.moon-icon {
+  position: absolute;
+  font-size: 0.75rem;
+  transition: opacity var(--transition-base);
+}
+
+.sun-icon {
+  left: -18px;
+  opacity: 1;
+}
+
+.moon-icon {
+  right: -18px;
+  opacity: 0;
+}
+
+.theme-toggle.dark .sun-icon {
+  opacity: 0;
+}
+
+.theme-toggle.dark .moon-icon {
+  opacity: 1;
+}
+
+.toggle-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--transition-base);
+}
+
+.theme-toggle:hover .toggle-label {
+  color: var(--text-primary);
+}
+
+/* Ripple effect */
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.theme-toggle:active::after {
+  width: 100px;
+  height: 100px;
+}
+
+/* Accessibility focus styles */
+.theme-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toggle-label {
+    display: none;
+  }
+}

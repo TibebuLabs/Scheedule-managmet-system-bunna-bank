@@ -15,8 +15,6 @@ import ProfilePage from '../components/Header/ProfilePage';
 import SettingsPage from '../components/Header/SettingsPage';
 import PrivacyPage from '../components/Header/PrivacyPage';
 
-import './Dashboard.css';
-
 const Dashboard = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -235,7 +233,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
     switch (activeMenu) {
       case 'dashboard':
         return (
-          <div className="dashboard-content">
+          <div className="space-y-5 md:space-y-6">
             <WelcomeBanner 
               darkMode={effectiveDarkMode} 
               userName={currentUser.fullName}
@@ -247,8 +245,8 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
               pendingApprovals={4}
               darkMode={effectiveDarkMode}
             />
-            <div className="dashboard-grid">
-              <div className="quick-actions-full">
+            <div className="grid grid-cols-1 gap-5 md:gap-6">
+              <div className="col-span-1">
                 <QuickActions 
                   onAddStaff={() => { setActiveMenu('staff'); setActiveSubMenu('add-staff'); }}
                   onAddTask={() => { setActiveMenu('task'); setActiveSubMenu('add-task'); }}
@@ -281,14 +279,13 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             darkMode={effectiveDarkMode}
           />
         ) : (
-          <div className="tasks-grid">
+          <div className="">
             {tasks.map(task => (
               <TaskCard key={task.id} task={task} darkMode={effectiveDarkMode} />
             ))}
           </div>
         );
       case 'TaskSchedule':
-        // Handle submenu selection
         if (activeSubMenu === 'add-schedule') {
           return (
             <TaskSchedule 
@@ -299,7 +296,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             />
           );
         } else {
-          // Default to view schedule
           return (
             <ScheduleTable 
               darkMode={effectiveDarkMode}
@@ -333,14 +329,14 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
         );
       case 'reports':
         return (
-          <div className="dashboard-content">
-            <h2 className={effectiveDarkMode ? 'text-white' : 'text-dark'}>Reports</h2>
-            <p className={effectiveDarkMode ? 'text-gray-300' : 'text-gray-700'}>Reports section will be implemented here.</p>
+          <div className="p-5 md:p-6">
+            <h2 className={`text-xl md:text-2xl font-bold mb-4 ${effectiveDarkMode ? 'text-white' : 'text-gray-800'}`}>Reports</h2>
+            <p className={effectiveDarkMode ? 'text-gray-300' : 'text-gray-600'}>Reports section will be implemented here.</p>
           </div>
         );
       default:
         return (
-          <div className="dashboard-content">
+          <div className="space-y-5 md:space-y-6">
             <WelcomeBanner 
               darkMode={effectiveDarkMode} 
               userName={currentUser.fullName}
@@ -358,7 +354,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
   };
 
   return (
-    <div className={`dashboard-container ${effectiveDarkMode ? 'dark' : 'light'}`}>
+    <div className={`min-h-screen ${effectiveDarkMode ? 'dark bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-gray-50 to-blue-50'}`}>
       <Sidebar 
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -372,7 +368,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
         setMobileMenuOpen={setMobileMenuOpen}
       />
       
-      <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'} ${effectiveDarkMode ? 'dark' : 'light'}`}>
+      <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <Header 
           darkMode={effectiveDarkMode}
           setDarkMode={effectiveSetDarkMode}
@@ -391,9 +387,11 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
           setMobileMenuOpen={setMobileMenuOpen}
         />
         
-        <main className={`main-section ${effectiveDarkMode ? 'dark' : 'light'}`}>
-          <div className="content-wrapper">
-            {renderContent()}
+        <main className="min-h-[calc(100vh-4rem)] p-4 md:p-5">
+          <div className="max-w-full mx-auto px-3 sm:px-4 md:px-5 lg:px-6">
+            <div className="animate-fade-in">
+              {renderContent()}
+            </div>
           </div>
         </main>
       </div>

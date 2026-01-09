@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 * {
   margin: 0;
@@ -17,24 +17,20 @@ body {
   min-height: 100vh;
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Selection color */
 ::selection {
   background-color: var(--primary);
   color: white;
 }
 
-/* Focus styles for accessibility */
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
-/* Print styles */
 @media print {
   .no-print {
     display: none !important;
@@ -43,5 +39,19 @@ html {
   body {
     background: white !important;
     color: black !important;
+  }
+} */
+ @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations */
+@layer utilities {
+  .animate-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animate-delay-4000 {
+    animation-delay: 4s;
   }
 }

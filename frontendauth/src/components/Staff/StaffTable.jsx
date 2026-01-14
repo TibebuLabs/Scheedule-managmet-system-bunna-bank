@@ -11,6 +11,19 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  
+  // Modal states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: '',
+    message: '',
+    details: ''
+  });
+  const [staffToDelete, setStaffToDelete] = useState(null);
+  const [staffDetails, setStaffDetails] = useState(null);
 
   const fetchStaffMembers = async () => {
     try {
@@ -93,14 +106,28 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       ));
       
       setEditingId(null);
-      alert('✅ Staff updated successfully!');
+      setModalContent({
+        title: 'Success',
+        message: 'Staff updated successfully!',
+        details: `${updateData.firstName} ${updateData.lastName} has been updated.`
+      });
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('❌ Error updating staff:', error);
       if (error.response?.data?.message) {
-        alert(`Failed: ${error.response.data.message}`);
+        setModalContent({
+          title: 'Update Failed',
+          message: error.response.data.message,
+          details: 'Please check the information and try again.'
+        });
       } else {
-        alert('Failed to update staff member.');
+        setModalContent({
+          title: 'Update Failed',
+          message: 'Failed to update staff member.',
+          details: 'An error occurred while updating. Please try again.'
+        });
       }
+      setShowErrorModal(true);
     }
   };
 
@@ -145,17 +172,62 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
     }
   };
 
-  const handleDeleteStaff = async (staffId, staffName) => {
-    if (window.confirm(`Are you sure you want to delete ${staffName}?`)) {
+  const handleDeleteClick = (staffId, staffName) => {
+    setStaffToDelete({ id: staffId, name: staffName });
+    setModalContent({
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to delete ${staffName}?`,
+      details: 'This action cannot be undone.'
+    });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (staffToDelete) {
       try {
-        await axios.delete(`${API_BASE_URL}/staff/${staffId}`);
+        await axios.delete(`${API_BASE_URL}/staff/${staffToDelete.id}`);
         fetchStaffMembers();
-        alert('✅ Staff member deleted successfully!');
+        setModalContent({
+          title: 'Success',
+          message: 'Staff member deleted successfully!',
+          details: `${staffToDelete.name} has been removed from the system.`
+        });
+        setShowSuccessModal(true);
       } catch (error) {
         console.error('❌ Error deleting staff:', error);
-        alert('❌ Failed to delete staff member');
+        setModalContent({
+          title: 'Deletion Failed',
+          message: 'Failed to delete staff member',
+          details: 'Please try again or contact support if the issue persists.'
+        });
+        setShowErrorModal(true);
+      } finally {
+        setStaffToDelete(null);
+        setShowDeleteModal(false);
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setStaffToDelete(null);
+    setShowDeleteModal(false);
+  };
+
+  const handleViewDetails = (staff) => {
+    setStaffDetails(staff);
+    setModalContent({
+      title: 'Staff Details',
+      message: `${staff.firstName} ${staff.lastName}`,
+      details: `
+        Email: ${staff.email}
+        Role: ${staff.role}
+        Department: ${staff.department}
+        Phone: ${formatPhoneNumber(staff.phone)}
+        Status: ${staff.status}
+        Employee ID: ${staff.employeeId || 'N/A'}
+      `
+    });
+    setShowDetailsModal(true);
   };
 
   const formatPhoneNumber = (phone) => {
@@ -166,6 +238,15 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
     }
     return phone;
+  };
+
+  const closeModal = () => {
+    setShowSuccessModal(false);
+    setShowErrorModal(false);
+    setShowDeleteModal(false);
+    setShowDetailsModal(false);
+    setModalContent({ title: '', message: '', details: '' });
+    setStaffDetails(null);
   };
 
   if (loading) {
@@ -181,6 +262,93 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
 
   return (
     <div className="staff-management">
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="modal-overlay">
+          <div className="modal-content success">
+            <div className="modal-header">
+              <h3>✅ {modalContent.title}</h3>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+            </div>
+            <div className="modal-footer">
+              <button className="modal-button confirm" onClick={closeModal}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="modal-overlay">
+          <div className="modal-content error">
+            <div className="modal-header">
+              <h3>❌ {modalContent.title}</h3>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+            </div>
+            <div className="modal-footer">
+              <button className="modal-button confirm" onClick={closeModal}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content warning">
+            <div className="modal-header">
+              <h3>⚠️ {modalContent.title}</h3>
+              <button className="modal-close" onClick={cancelDelete}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+            </div>
+            <div className="modal-footer">
+              <button className="modal-button cancel" onClick={cancelDelete}>Cancel</button>
+              <button className="modal-button delete" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {showDetailsModal && staffDetails && (
+        <div className="modal-overlay">
+          <div className="modal-content info">
+            <div className="modal-header">
+              <h3>👤 {modalContent.title}</h3>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="staff-details-modal">
+                <div className="staff-avatar-large" style={{ backgroundColor: staffDetails.avatarColor }}>
+                  {staffDetails.firstName.charAt(0)}
+                </div>
+                <div className="staff-info-list">
+                  {modalContent.details.split('\n').map((line, index) => (
+                    <div key={index} className="detail-item">
+                      {line.trim()}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="modal-button confirm" onClick={closeModal}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="staff-header">
         <div className="header-content">
           <h2>👥 Staff Members</h2>
@@ -402,23 +570,14 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                             <button 
                               className="action-button delete" 
                               title="Delete"
-                              onClick={() => handleDeleteStaff(staff.id, `${staff.firstName} ${staff.lastName}`)}
+                              onClick={() => handleDeleteClick(staff.id, `${staff.firstName} ${staff.lastName}`)}
                             >
                               <span>🗑️</span>
                             </button>
                             <button 
                               className="action-button view" 
                               title="View Details"
-                              onClick={() => alert(
-                                `Staff Details:\n\n` +
-                                `Name: ${staff.firstName} ${staff.lastName}\n` +
-                                `Email: ${staff.email}\n` +
-                                `Role: ${staff.role}\n` +
-                                `Department: ${staff.department}\n` +
-                                `Phone: ${formatPhoneNumber(staff.phone)}\n` +
-                                `Status: ${staff.status}\n` +
-                                `Employee ID: ${staff.employeeId || 'N/A'}`
-                              )}
+                              onClick={() => handleViewDetails(staff)}
                             >
                               <span>👁️</span>
                             </button>

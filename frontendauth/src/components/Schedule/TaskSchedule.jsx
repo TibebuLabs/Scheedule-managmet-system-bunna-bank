@@ -633,13 +633,13 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                 Recurrence
               </label>
               <div className="recurrence-buttons">
-                <button
+                {/* <button
                   type="button"
                   className={`recurrence-button ${formData.recurrence === 'once' ? 'active' : ''}`}
                   onClick={() => setFormData(prev => ({ ...prev, recurrence: 'once' }))}
                 >
                   <span>Once</span>
-                </button>
+                </button> */}
                 <button
                   type="button"
                   className={`recurrence-button ${formData.recurrence === 'daily' ? 'active' : ''}`}
@@ -821,98 +821,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
               />
             </div>
 
-            {/* Task Settings */}
-            <div className="form-row">
-              <div className="form-group">
-                <label>
-                  <span className="label-icon">⚡</span>
-                  Priority
-                </label>
-                <div className="priority-buttons">
-                  <button
-                    type="button"
-                    className={`priority-button ${formData.priority === 'low' ? 'active' : ''} low`}
-                    onClick={() => setFormData(prev => ({ ...prev, priority: 'low' }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    <span>🐌 Low</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`priority-button ${formData.priority === 'medium' ? 'active' : ''} medium`}
-                    onClick={() => setFormData(prev => ({ ...prev, priority: 'medium' }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    <span>⚡ Medium</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`priority-button ${formData.priority === 'high' ? 'active' : ''} high`}
-                    onClick={() => setFormData(prev => ({ ...prev, priority: 'high' }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    <span>🔥 High</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`priority-button ${formData.priority === 'urgent' ? 'active' : ''} urgent`}
-                    onClick={() => setFormData(prev => ({ ...prev, priority: 'urgent' }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    <span>🚨 Urgent</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <span className="label-icon">⏱️</span>
-                  Estimated Hours
-                </label>
-                <div className="hours-input">
-                  <button 
-                    type="button"
-                    className="hours-btn minus"
-                    onClick={() => setFormData(prev => ({ 
-                      ...prev, 
-                      estimatedHours: Math.max(0.5, prev.estimatedHours - 0.5) 
-                    }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    name="estimatedHours"
-                    value={formData.estimatedHours}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      estimatedHours: Math.min(24, Math.max(0.5, parseFloat(e.target.value) || 0.5)) 
-                    }))}
-                    min="0.5"
-                    max="24"
-                    step="0.5"
-                    className="hours-value"
-                    disabled={!formData.selectedTask}
-                  />
-                  <button 
-                    type="button"
-                    className="hours-btn plus"
-                    onClick={() => setFormData(prev => ({ 
-                      ...prev, 
-                      estimatedHours: Math.min(24, prev.estimatedHours + 0.5) 
-                    }))}
-                    disabled={!formData.selectedTask}
-                  >
-                    +
-                  </button>
-                  <div className="hours-hint">
-                    Min: 0.5h, Max: 24h
-                  </div>
-                </div>
-              </div>
-            </div>
-
+        
             {/* Notes Field */}
             <div className="form-group">
               <label>

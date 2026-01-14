@@ -1,13 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/auth.controller');
-const authMiddleware = require('../middleware/auth.middleware');
+const { register, login, getProfile } = require('../controllers/auth.controller');
+const { protect, validateRegistration } = require('../middleware/auth.middleware');
 
-// Public routes
-router.post('/register', authMiddleware.validateRegistration, authController.register);
-router.post('/login', authController.login);
+// Health check
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Auth service is running 🚀',
+    endpoints: {
+      register: 'POST /api/auth/register',
+      login: 'POST /api/auth/login',
+      profile: 'GET /api/auth/profile'
+    }
+  });
+});
 
-// Protected routes
-router.get('/profile', authMiddleware.protect, authController.getProfile);
+// Register route
+router.post('/register', validateRegistration, register);
+
+// Login route
+router.post('/login', login);
+
+// Profile route (protected)
+router.get('/profile', protect, getProfile);
 
 module.exports = router;

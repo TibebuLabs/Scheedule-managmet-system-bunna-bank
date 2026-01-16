@@ -16,7 +16,8 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     recurrence: 'once',
     notes: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    location: 'Office'
   });
 
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     setError(message);
     const timer = setTimeout(() => {
       setError('');
+      setWeeklyLimitErrors([]);
     }, AUTO_DISMISS_TIME);
     setErrorTimer(timer);
   };
@@ -95,35 +97,75 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     return colors[idString.charCodeAt(0) % colors.length];
   };
 
-  // Fetch staff members with weekly load
+  // Fetch staff members with actual weekly load from API
   const fetchStaffMembers = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/staff/all`);
       
       if (response.data.success) {
-        const staffWithLoad = response.data.employees.map((employee) => {
-          return {
-            id: employee._id,
-            _id: employee._id,
-            firstName: employee.firstName,
-            lastName: employee.lastName,
-            email: employee.email,
-            role: employee.role || 'Staff',
-            department: employee.department || 'General',
-            status: employee.status || 'Active',
-            avatarColor: getAvatarColor(employee._id)
-          };
-        });
+        const staffWithLoad = await Promise.all(
+          response.data.employees.map(async (employee) => {
+            try {
+              // Fetch actual weekly load for each staff
+              const today = new Date();
+              const weekStart = new Date(today);
+              weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday of this week
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 6); // Sunday of this week
+              
+              const weeklyLoadResponse = await axios.get(
+                `${API_BASE_URL}/schedules/staff/${employee._id}/workload`,
+                {
+                  params: {
+                    startDate: weekStart.toISOString().split('T')[0],
+                    endDate: weekEnd.toISOString().split('T')[0]
+                  }
+                }
+              );
+              
+              const weeklyLoad = weeklyLoadResponse.data.success ? 
+                weeklyLoadResponse.data.data.workload : 
+                { totalTasks: 0, totalHours: 0 };
+              
+              return {
+                id: employee._id,
+                _id: employee._id,
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                email: employee.email,
+                role: employee.role || 'Staff',
+                department: employee.department || 'General',
+                status: employee.status || 'Active',
+                avatarColor: getAvatarColor(employee._id),
+                weeklyLoad: weeklyLoad
+              };
+            } catch (loadError) {
+              console.error(`Error loading weekly data for ${employee.firstName}:`, loadError);
+              return {
+                id: employee._id,
+                _id: employee._id,
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                email: employee.email,
+                role: employee.role || 'Staff',
+                department: employee.department || 'General',
+                status: employee.status || 'Active',
+                avatarColor: getAvatarColor(employee._id),
+                weeklyLoad: { totalTasks: 0, totalHours: 0 }
+              };
+            }
+          })
+        );
         
         setLocalStaff(staffWithLoad);
         
-        // Build staff weekly load map (simplified)
+        // Build staff weekly load map
         const loadMap = {};
         staffWithLoad.forEach(staff => {
           loadMap[staff.id] = {
-            totalTasks: 0,
-            totalHours: 0,
-            weeklyLimitAvailable: true
+            totalTasks: staff.weeklyLoad.totalTasks || 0,
+            totalHours: staff.weeklyLoad.totalHours || 0,
+            weeklyLimitAvailable: staff.weeklyLoad.totalTasks < 1 // One task per week limit
           };
         });
         setStaffWeeklyLoad(loadMap);
@@ -180,15 +222,9 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     loadData();
   }, []);
 
-  // Handle staff selection with weekly limit validation
+  // Handle staff selection with proper validation
   const handleStaffSelect = (staffId) => {
     const staff = localStaff.find(s => s.id === staffId);
-    
-    // Check if staff already has weekly task (simplified logic)
-    if (staffWeeklyLoad[staffId]?.totalTasks >= 1 && formData.scheduleType === 'weekly') {
-      setAutoDismissError(`${staff.firstName} already has a weekly task assigned. One task per week maximum.`);
-      return;
-    }
     
     // Check if staff is already selected
     if (formData.selectedStaff.includes(staffId)) {
@@ -197,6 +233,21 @@ const TaskSchedule = ({ darkMode, onClose }) => {
         selectedStaff: prev.selectedStaff.filter(id => id !== staffId)
       }));
     } else {
+      // For weekly schedules: Check weekly limit
+      if (formData.scheduleType === 'weekly') {
+        const weeklyLoad = staffWeeklyLoad[staffId];
+        if (weeklyLoad && weeklyLoad.totalTasks >= 1) {
+          setAutoDismissError(`${staff.firstName} already has ${weeklyLoad.totalTasks} task(s) this week. Weekly limit: 1 task per staff.`);
+          return;
+        }
+      }
+      
+      // For daily schedules: Check if staff is available on selected date
+      if (formData.scheduleType === 'daily' && selectedDate) {
+        // This check would require an API call to check staff availability
+        // For now, we'll just add the staff
+      }
+      
       setFormData(prev => ({
         ...prev,
         selectedStaff: [...prev.selectedStaff, staffId]
@@ -220,42 +271,46 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     }
   };
 
-  // Check weekly limits before submission
+  // Check weekly limits before submission - FIXED VERSION
   const checkWeeklyLimits = async () => {
     const errors = [];
     
-    for (const staffId of formData.selectedStaff) {
-      const staff = localStaff.find(s => s.id === staffId);
-      
-      // Check if staff already has weekly task
-      if (staffWeeklyLoad[staffId]?.totalTasks >= 1 && formData.scheduleType === 'weekly') {
-        errors.push({
-          staffId,
-          staffName: `${staff.firstName} ${staff.lastName}`,
-          reason: 'Already has a weekly task assigned',
-          suggestion: 'Select different staff or choose daily schedule'
-        });
-      }
-      
-      // For weekly schedules, check consecutive week restriction
-      if (formData.scheduleType === 'weekly' && formData.selectedTask) {
-        const task = localTasks.find(t => t.id === formData.selectedTask);
-        if (task?.category) {
-          try {
-            const checkResponse = await axios.get(
-              `${API_BASE_URL}/schedules/check/consecutive/${staffId}/${task.category}/${selectedDate}`
-            );
-            if (!checkResponse.data.available) {
-              errors.push({
-                staffId,
-                staffName: `${staff.firstName} ${staff.lastName}`,
-                reason: checkResponse.data.reason,
-                suggestion: 'Schedule with at least one week gap'
-              });
+    // Only check weekly limits for weekly schedules
+    if (formData.scheduleType === 'weekly') {
+      for (const staffId of formData.selectedStaff) {
+        const staff = localStaff.find(s => s.id === staffId);
+        const weeklyLoad = staffWeeklyLoad[staffId];
+        
+        // Check if staff already has weekly task
+        if (weeklyLoad && weeklyLoad.totalTasks >= 1) {
+          errors.push({
+            staffId,
+            staffName: `${staff.firstName} ${staff.lastName}`,
+            reason: `Already has ${weeklyLoad.totalTasks} task(s) assigned this week`,
+            suggestion: 'Select different staff or choose daily schedule'
+          });
+        }
+        
+        // Check consecutive week restriction for weekly schedules
+        if (formData.selectedTask) {
+          const task = localTasks.find(t => t.id === formData.selectedTask);
+          if (task?.category && formData.startDate) {
+            try {
+              const checkResponse = await axios.get(
+                `${API_BASE_URL}/schedules/check/consecutive/${staffId}/${task.category}/${formData.startDate}`
+              );
+              if (!checkResponse.data.available) {
+                errors.push({
+                  staffId,
+                  staffName: `${staff.firstName} ${staff.lastName}`,
+                  reason: checkResponse.data.reason,
+                  suggestion: 'Schedule with at least one week gap'
+                });
+              }
+            } catch (error) {
+              console.log('Could not check consecutive week restriction:', error.message);
+              // Don't add to errors if endpoint is unavailable
             }
-          } catch (error) {
-            console.log('Could not check consecutive week restriction:', error.message);
-            // Don't add to errors if endpoint is unavailable
           }
         }
       }
@@ -266,7 +321,11 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     if (errors.length > 0) {
       setAutoDismissError(`Found ${errors.length} weekly limit violation(s)`);
     } else {
-      setAutoDismissSuccess('✅ All weekly limits are satisfied');
+      if (formData.scheduleType === 'weekly') {
+        setAutoDismissSuccess('✅ All weekly limits are satisfied');
+      } else {
+        setAutoDismissSuccess('✅ Daily schedule - no weekly restrictions apply');
+      }
     }
     
     return errors.length === 0;
@@ -282,12 +341,15 @@ const TaskSchedule = ({ darkMode, onClose }) => {
     const task = localTasks.find(t => t.id === formData.selectedTask);
     const selectedStaff = formData.selectedStaff.map(staffId => {
       const staff = localStaff.find(s => s.id === staffId);
+      const weeklyLoad = staffWeeklyLoad[staffId];
       return {
         name: `${staff.firstName} ${staff.lastName}`,
         email: staff.email,
-        weeklyLoad: staffWeeklyLoad[staffId]
+        weeklyLoad: weeklyLoad || { totalTasks: 0, totalHours: 0 }
       };
     });
+    
+    const scheduleDate = formData.scheduleType === 'daily' ? selectedDate : formData.startDate;
     
     setEmailPreview({
       taskTitle: task.title,
@@ -297,13 +359,13 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       date: formData.scheduleType === 'daily' ? selectedDate : `${formData.startDate} to ${formData.endDate}`,
       estimatedHours: formData.estimatedHours,
       priority: formData.priority,
-      weekNumber: getWeekNumber(new Date(selectedDate))
+      weekNumber: getWeekNumber(new Date(scheduleDate))
     });
     
     setAutoDismissSuccess('✅ Email preview generated successfully');
   };
 
-  // Handle form submission
+  // Handle form submission - FIXED VERSION
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -328,14 +390,15 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       return;
     }
     
-    if (formData.scheduleType === 'weekly' && (!formData.startDate || !formData.endDate)) {
-      setAutoDismissError('Please select start and end dates for weekly schedule');
-      setLoading(false);
-      return;
-    }
-
-    // Validate date range
+    // For weekly schedules, check dates
     if (formData.scheduleType === 'weekly') {
+      if (!formData.startDate || !formData.endDate) {
+        setAutoDismissError('Please select start and end dates for weekly schedule');
+        setLoading(false);
+        return;
+      }
+      
+      // Validate date range for weekly
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
       const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
@@ -345,33 +408,48 @@ const TaskSchedule = ({ darkMode, onClose }) => {
         setLoading(false);
         return;
       }
+      
+      if (diffDays < 1) {
+        setAutoDismissError('End date must be after start date');
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // For daily schedules, check date
+    if (formData.scheduleType === 'daily' && !selectedDate) {
+      setAutoDismissError('Please select a date for daily schedule');
+      setLoading(false);
+      return;
     }
 
     try {
-      // Calculate end date for weekly schedules
-      let endDate = null;
-      if (formData.scheduleType === 'weekly' && formData.endDate) {
-        endDate = new Date(formData.endDate);
-        endDate.setHours(17, 0, 0, 0); // 5 PM
-      }
-
+      // Prepare schedule data
       const scheduleData = {
         scheduleType: formData.scheduleType,
         taskId: formData.selectedTask,
         staffIds: formData.selectedStaff,
         estimatedHours: parseFloat(formData.estimatedHours),
         scheduledDate: formData.scheduleType === 'daily' 
-          ? `${selectedDate}T10:00:00.000Z`
-          : `${formData.startDate}T10:00:00.000Z`,
-        endDate: endDate ? endDate.toISOString() : null,
+          ? `${selectedDate}T10:00:00.000Z`  // 10:00 AM for daily
+          : `${formData.startDate}T10:00:00.000Z`, // 10:00 AM for weekly
         priority: formData.priority,
         recurrence: formData.recurrence,
         taskDescription: formData.taskDescription || localTasks.find(t => t.id === formData.selectedTask)?.description || '',
         department: localStaff.find(s => s.id === formData.selectedStaff[0])?.department || 'General',
         sendEmail: formData.sendEmail,
         notes: formData.notes,
+        location: formData.location || 'Office',
+        // Only enable rotation for weekly schedules
         enableRotation: formData.scheduleType === 'weekly'
       };
+
+      // Add endDate for weekly schedules
+      if (formData.scheduleType === 'weekly' && formData.endDate) {
+        const endDate = new Date(formData.endDate);
+        endDate.setHours(17, 0, 0, 0); // 5 PM
+        scheduleData.endDate = endDate.toISOString();
+      }
 
       console.log('📤 Submitting schedule:', scheduleData);
 
@@ -379,7 +457,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       
       if (response.data.success) {
         const schedule = response.data.data?.schedule;
-        let successMessage = `✅ Schedule created successfully! ID: ${schedule?.scheduleId || 'N/A'}`;
+        let successMessage = `✅ ${formData.scheduleType === 'daily' ? 'Daily' : 'Weekly'} schedule created successfully! ID: ${schedule?.scheduleId || 'N/A'}`;
         
         // Show detailed success message
         if (formData.sendEmail) {
@@ -390,15 +468,17 @@ const TaskSchedule = ({ darkMode, onClose }) => {
           }
         }
         
-        // Show weekly limit enforcement
-        successMessage += ' 🛡️ Weekly limits enforced.';
+        // Show schedule type specific message
+        if (formData.scheduleType === 'weekly') {
+          successMessage += ' 🛡️ Weekly limits enforced.';
+        }
         
         setAutoDismissSuccess(successMessage);
 
         // Reset form after success
         setTimeout(() => {
           resetForm();
-          fetchStaffMembers(); // Refresh data
+          fetchStaffMembers(); // Refresh data to update weekly loads
         }, 3000);
       }
 
@@ -408,18 +488,23 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       // Handle different error types
       let errorMessage = 'Failed to create schedule. Please try again.';
       
-      if (error.response?.data?.code === 'WEEKLY_LIMIT_VIOLATION') {
+      if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-        setWeeklyLimitErrors(error.response.data.weeklyLimitErrors || []);
-      } 
-      else if (error.response?.data?.code === 'STAFF_UNAVAILABLE') {
-        errorMessage = error.response.data.message;
+        
+        // Check for specific error patterns
+        if (errorMessage.includes('already has a') && errorMessage.includes('task scheduled')) {
+          // This is a staff availability error
+          setAutoDismissError(errorMessage);
+        } else if (error.response.data.code === 'WEEKLY_LIMIT_VIOLATION') {
+          errorMessage = error.response.data.message;
+          setWeeklyLimitErrors(error.response.data.weeklyLimitErrors || []);
+          setAutoDismissError(errorMessage);
+        } else {
+          setAutoDismissError(errorMessage);
+        }
+      } else {
+        setAutoDismissError(errorMessage);
       }
-      else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      
-      setAutoDismissError(errorMessage);
       
     } finally {
       setLoading(false);
@@ -445,7 +530,8 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       recurrence: 'once',
       notes: '',
       startDate: tomorrow.toISOString().split('T')[0],
-      endDate: nextWeek.toISOString().split('T')[0]
+      endDate: nextWeek.toISOString().split('T')[0],
+      location: 'Office'
     });
     setSelectedDate(tomorrow.toISOString().split('T')[0]);
     setWeeklyLimitErrors([]);
@@ -521,21 +607,41 @@ const TaskSchedule = ({ darkMode, onClose }) => {
         </div>
       </div>
 
-      {/* Weekly Restrictions Banner */}
-      <div className="restrictions-banner">
-        <div className="restriction-item">
-          <span className="restriction-icon">🛡️</span>
-          <span className="restriction-text">One task per week per staff</span>
+      {/* Weekly Restrictions Banner - Only show restrictions for weekly schedules */}
+      {formData.scheduleType === 'weekly' && (
+        <div className="restrictions-banner">
+          <div className="restriction-item">
+            <span className="restriction-icon">🛡️</span>
+            <span className="restriction-text">One task per week per staff</span>
+          </div>
+          <div className="restriction-item">
+            <span className="restriction-icon">⏰</span>
+            <span className="restriction-text">No similar tasks in consecutive weeks</span>
+          </div>
+          <div className="restriction-item">
+            <span className="restriction-icon">📧</span>
+            <span className="restriction-text">Automatic email notifications</span>
+          </div>
         </div>
-        <div className="restriction-item">
-          <span className="restriction-icon">⏰</span>
-          <span className="restriction-text">No similar tasks in consecutive weeks</span>
+      )}
+
+      {/* Daily Schedule Banner */}
+      {formData.scheduleType === 'daily' && (
+        <div className="restrictions-banner daily-banner">
+          <div className="restriction-item">
+            <span className="restriction-icon">📅</span>
+            <span className="restriction-text">Single day assignment</span>
+          </div>
+          <div className="restriction-item">
+            <span className="restriction-icon">👥</span>
+            <span className="restriction-text">Flexible staff selection</span>
+          </div>
+          <div className="restriction-item">
+            <span className="restriction-icon">📧</span>
+            <span className="restriction-text">Automatic email notifications</span>
+          </div>
         </div>
-        <div className="restriction-item">
-          <span className="restriction-icon">📧</span>
-          <span className="restriction-text">Automatic email notifications</span>
-        </div>
-      </div>
+      )}
 
       {/* Main Form */}
       <form onSubmit={handleSubmit} className="schedule-form">
@@ -557,7 +663,11 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                 <button
                   type="button"
                   className={`type-button ${formData.scheduleType === 'daily' ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, scheduleType: 'daily' }))}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, scheduleType: 'daily' }));
+                    setWeeklyLimitErrors([]);
+                    setError('');
+                  }}
                 >
                   <span className="button-icon">📅</span>
                   <span>Daily Schedule</span>
@@ -566,7 +676,11 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                 <button
                   type="button"
                   className={`type-button ${formData.scheduleType === 'weekly' ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, scheduleType: 'weekly' }))}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, scheduleType: 'weekly' }));
+                    setWeeklyLimitErrors([]);
+                    setError('');
+                  }}
                 >
                   <span className="button-icon">📆</span>
                   <span>Weekly Schedule</span>
@@ -626,36 +740,9 @@ const TaskSchedule = ({ darkMode, onClose }) => {
               </div>
             )}
 
-            {/* Recurrence */}
-            <div className="form-group">
-              <label>
-                <span className="label-icon">🔄</span>
-                Recurrence
-              </label>
-              <div className="recurrence-buttons">
-                {/* <button
-                  type="button"
-                  className={`recurrence-button ${formData.recurrence === 'once' ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, recurrence: 'once' }))}
-                >
-                  <span>Once</span>
-                </button> */}
-                <button
-                  type="button"
-                  className={`recurrence-button ${formData.recurrence === 'daily' ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, recurrence: 'daily' }))}
-                >
-                  <span>Daily</span>
-                </button>
-                <button
-                  type="button"
-                  className={`recurrence-button ${formData.recurrence === 'weekly' ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, recurrence: 'weekly' }))}
-                >
-                  <span>Weekly</span>
-                </button>
-              </div>
-            </div>
+          
+
+          
 
             {/* Email Notification */}
             <div className="form-group">
@@ -697,9 +784,17 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                   className="select-all-button"
                   onClick={() => {
                     const allIds = localStaff.map(s => s.id);
+                    // For weekly schedules, filter out staff who have reached weekly limit
+                    const availableIds = formData.scheduleType === 'weekly' 
+                      ? allIds.filter(id => {
+                          const load = staffWeeklyLoad[id];
+                          return !load || load.totalTasks < 1;
+                        })
+                      : allIds;
+                    
                     setFormData(prev => ({
                       ...prev,
-                      selectedStaff: prev.selectedStaff.length === allIds.length ? [] : allIds
+                      selectedStaff: prev.selectedStaff.length === availableIds.length ? [] : availableIds
                     }));
                   }}
                 >
@@ -717,20 +812,21 @@ const TaskSchedule = ({ darkMode, onClose }) => {
               <div className="staff-selection-grid">
                 {localStaff.map(staff => {
                   const isSelected = formData.selectedStaff.includes(staff.id);
-                  const weeklyLoad = staffWeeklyLoad[staff.id] || { totalTasks: 0, weeklyLimitAvailable: true };
+                  const weeklyLoad = staffWeeklyLoad[staff.id] || { totalTasks: 0, totalHours: 0, weeklyLimitAvailable: true };
+                  const hasWeeklyLimit = formData.scheduleType === 'weekly' && weeklyLoad.totalTasks >= 1;
                   
                   return (
                     <div 
                       key={staff.id}
                       className={`staff-select-card ${isSelected ? 'selected' : ''} ${
-                        !weeklyLoad.weeklyLimitAvailable ? 'limit-reached' : ''
+                        hasWeeklyLimit ? 'limit-reached' : ''
                       }`}
-                      onClick={() => handleStaffSelect(staff.id)}
-                      title={!weeklyLoad.weeklyLimitAvailable ? 'Weekly limit reached' : ''}
+                      onClick={() => !hasWeeklyLimit && handleStaffSelect(staff.id)}
+                      title={hasWeeklyLimit ? `Weekly limit reached: ${weeklyLoad.totalTasks} task(s) this week` : ''}
                     >
                       <div className="staff-checkbox">
                         {isSelected && <div className="checkmark">✓</div>}
-                        {!weeklyLoad.weeklyLimitAvailable && <div className="limit-icon">⚠️</div>}
+                        {hasWeeklyLimit && <div className="limit-icon">⚠️</div>}
                       </div>
                       <div 
                         className="staff-avatar"
@@ -744,6 +840,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                         <div className="staff-department">{staff.department}</div>
                         <div className="weekly-load">
                           📊 Week {currentWeekNumber}: {weeklyLoad.totalTasks} task(s), {weeklyLoad.totalHours}h
+                          {hasWeeklyLimit && <span className="limit-text"> (Weekly Limit Reached)</span>}
                         </div>
                       </div>
                       <div className="staff-email">{staff.email}</div>
@@ -913,9 +1010,12 @@ const TaskSchedule = ({ darkMode, onClose }) => {
                 <p>Professional email will be sent with:</p>
                 <ul>
                   <li>Task details and schedule</li>
-                  <li>Weekly restrictions information</li>
+                  <li>Schedule Type: {emailPreview.scheduleType}</li>
                   <li>Week {emailPreview.weekNumber} schedule</li>
                   <li>Department contact information</li>
+                  {emailPreview.scheduleType === 'weekly' && (
+                    <li>Weekly restrictions information</li>
+                  )}
                 </ul>
               </div>
             </div>
@@ -934,15 +1034,17 @@ const TaskSchedule = ({ darkMode, onClose }) => {
               <span className="preview-icon">📧</span>
               Preview Email
             </button>
-            <button
-              type="button"
-              className="preview-button limit-check-btn"
-              onClick={checkWeeklyLimits}
-              disabled={!formData.selectedTask || formData.selectedStaff.length === 0}
-            >
-              <span className="preview-icon">🛡️</span>
-              Check Weekly Limits
-            </button>
+            {formData.scheduleType === 'weekly' && (
+              <button
+                type="button"
+                className="preview-button limit-check-btn"
+                onClick={checkWeeklyLimits}
+                disabled={!formData.selectedTask || formData.selectedStaff.length === 0}
+              >
+                <span className="preview-icon">🛡️</span>
+                Check Weekly Limits
+              </button>
+            )}
           </div>
           
           <div className="action-buttons">
@@ -977,21 +1079,31 @@ const TaskSchedule = ({ darkMode, onClose }) => {
         {/* Info Footer */}
         <div className="info-footer">
           <div className="info-item">
-            <span className="info-icon">🛡️</span>
-            <span className="info-text">Weekly Limits Enforced</span>
+            <span className="info-icon">
+              {formData.scheduleType === 'daily' ? '📅' : '📆'}
+            </span>
+            <span className="info-text">
+              {formData.scheduleType === 'daily' ? 'Daily Schedule' : 'Weekly Schedule'}
+            </span>
           </div>
           <div className="info-item">
             <span className="info-icon">📧</span>
-            <span className="info-text">Auto Email Notifications</span>
+            <span className="info-text">
+              {formData.sendEmail ? 'Email Enabled' : 'Email Disabled'}
+            </span>
           </div>
           <div className="info-item">
-            <span className="info-icon">⚡</span>
-            <span className="info-text">Real-time Validation</span>
+            <span className="info-icon">👥</span>
+            <span className="info-text">
+              {formData.selectedStaff.length} Staff Selected
+            </span>
           </div>
-          <div className="info-item">
-            <span className="info-icon">⏱️</span>
-            <span className="info-text">Auto-dismiss in 5s</span>
-          </div>
+          {formData.scheduleType === 'weekly' && (
+            <div className="info-item">
+              <span className="info-icon">🛡️</span>
+              <span className="info-text">Weekly Limits Enforced</span>
+            </div>
+          )}
         </div>
       </form>
     </div>

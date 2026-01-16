@@ -8,7 +8,7 @@ const authRoutes = require('./routes/auth.routes');
 const staffRoutes = require('./routes/staff.routes');
 const taskRoutes = require('./routes/task.routes');
 const scheduleRoutes = require('./routes/schedule.routes');
-const dailyScheduleRoutes = require('./routes/dailySchedule.routes');
+// const dailyScheduleRoutes = require('./routes/dailySchedule.routes');
 const emailRoutes = require('./routes/email.routes');
 
 const app = express();
@@ -75,7 +75,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/schedules', scheduleRoutes);
-app.use('/api/daily-schedules', dailyScheduleRoutes);
+// app.use('/api/daily-schedules', dailyScheduleRoutes);
 app.use('/api/email', emailRoutes);
 
 // Health check endpoint

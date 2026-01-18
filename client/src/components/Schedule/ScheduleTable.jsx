@@ -44,33 +44,13 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/schedules`);
       if (response.data.success) {
-        setSchedules(response.data.schedules);
+        setSchedules(response.data.schedules || []);
+      } else {
+        setSchedules([]);
       }
     } catch (error) {
       console.error("Fetch Error", error);
-      // Fallback Mock Data if API fails
-      setSchedules([
-        {
-          _id: "1",
-          taskTitle: "Monthly Audit",
-          taskDescription: "Review all teller transactions",
-          status: "scheduled",
-          priority: "high",
-          scheduledDate: new Date().toISOString(),
-          scheduleType: "monthly",
-          assignments: [{ staffName: "John Doe" }, { staffName: "Jane Smith" }],
-        },
-        {
-          _id: "2",
-          taskTitle: "ATM Refill",
-          taskDescription: "Refill downtown branch ATMs",
-          status: "in progress",
-          priority: "medium",
-          scheduledDate: new Date().toISOString(),
-          scheduleType: "daily",
-          assignments: [{ staffName: "Mike Ross" }],
-        },
-      ]);
+      setSchedules([]);
     } finally {
       setLoading(false);
     }
@@ -96,12 +76,23 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
     return <Clock size={14} className="text-slate-400" />;
   };
 
-  const filteredData = schedules.filter((item) => {
-    const matchesSearch = item.taskTitle
-      .toLowerCase()
-      .includes(filters.search.toLowerCase());
+  // const filteredData = schedules.filter((item) => {
+  //   const matchesSearch = item.taskTitle
+  //     .toLowerCase()
+  //     .includes(filters.search.toLowerCase());
+  //   const matchesStatus =
+  //     filters.status === "all" || item.status === filters.status;
+  //   return matchesSearch && matchesStatus;
+  // });
+  const filteredData = (schedules || []).filter((item) => {
+    // Safe navigation for properties in case item data is incomplete
+    const title = item.taskTitle || "";
+    const search = filters.search || "";
+
+    const matchesSearch = title.toLowerCase().includes(search.toLowerCase());
     const matchesStatus =
       filters.status === "all" || item.status === filters.status;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -109,7 +100,7 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
   const handleBulkAction = (action) => {
     if (
       !window.confirm(
-        `Are you sure you want to ${action} ${selectedIds.length} items?`
+        `Are you sure you want to ${action} ${selectedIds.length} items?`,
       )
     )
       return;
@@ -144,28 +135,28 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           title="Total Scheduled"
-          value={schedules.length}
+          value={schedules?.length}
           icon={Layers}
           color="blue"
           darkMode={darkMode}
         />
         <StatCard
           title="In Progress"
-          value={schedules.filter((s) => s.status === "in progress").length}
+          value={schedules?.filter((s) => s.status === "in progress")?.length}
           icon={RefreshCw}
           color="yellow"
           darkMode={darkMode}
         />
         <StatCard
           title="Completed"
-          value={schedules.filter((s) => s.status === "completed").length}
+          value={schedules?.filter((s) => s.status === "completed").length}
           icon={CheckCircle}
           color="emerald"
           darkMode={darkMode}
         />
         <StatCard
           title="Urgent"
-          value={schedules.filter((s) => s.priority === "high").length}
+          value={schedules?.filter((s) => s.priority === "high").length}
           icon={AlertCircle}
           color="red"
           darkMode={darkMode}
@@ -284,7 +275,9 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
                       type="checkbox"
                       onChange={(e) =>
                         setSelectedIds(
-                          e.target.checked ? filteredData.map((d) => d._id) : []
+                          e.target.checked
+                            ? filteredData.map((d) => d._id)
+                            : [],
                         )
                       }
                       checked={
@@ -328,7 +321,7 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
                             setSelectedIds((prev) =>
                               prev.includes(schedule._id)
                                 ? prev.filter((id) => id !== schedule._id)
-                                : [...prev, schedule._id]
+                                : [...prev, schedule._id],
                             )
                           }
                           className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
@@ -352,7 +345,7 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                           <Calendar size={14} className="text-slate-400" />
                           {new Date(
-                            schedule.scheduledDate
+                            schedule.scheduledDate,
                           ).toLocaleDateString()}
                         </div>
                         <div className="text-xs text-slate-500 mt-1 capitalize">
@@ -380,7 +373,7 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusStyle(
-                            schedule.status
+                            schedule.status,
                           )} border-transparent`}
                         >
                           {schedule.status}
@@ -390,7 +383,7 @@ const ScheduleTable = ({ darkMode, refreshTrigger }) => {
                         <button
                           onClick={() =>
                             setActiveMenu(
-                              activeMenu === schedule._id ? null : schedule._id
+                              activeMenu === schedule._id ? null : schedule._id,
                             )
                           }
                           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"

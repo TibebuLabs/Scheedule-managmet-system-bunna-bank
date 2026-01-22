@@ -572,17 +572,17 @@ class ScheduleController {
         timestamp: new Date().toISOString(),
         version: '1.0.0',
         endpoints: [
-          'POST /api/schedules - Create schedule',
-          'GET /api/schedules - Get all schedules',
-          'GET /api/schedules/upcoming - Get upcoming schedules',
-          'GET /api/schedules/:id - Get schedule by ID',
-          'PUT /api/schedules/:id - Update schedule',
-          'DELETE /api/schedules/:id - Delete schedule',
-          'GET /api/schedules/staff/:staffId/workload - Get staff workload',
-          'GET /api/schedules/availability/:date - Check date availability',
-          'GET /api/schedules/test-email - Test email service',
-          'GET /api/schedules/staff/:staffId/weekly/:weekNumber/:year - Get staff weekly schedule',
-          'GET /api/schedules/check/consecutive/:staffId/:taskCategory/:date - Check consecutive week restriction'
+          'POST /api/schedules',
+          'GET /api/schedules',
+          'GET /api/schedules/upcoming',
+          'GET /api/schedules/:id',
+          'PUT /api/schedules/:id',
+          'DELETE /api/schedules/:id',
+          'GET /api/schedules/staff/:staffId/workload',
+          'GET /api/schedules/availability/:date',
+          'GET /api/schedules/test-email',
+          'GET /api/schedules/staff/:staffId/weekly/:weekNumber/:year',
+          'GET /api/schedules/check/consecutive/:staffId/:taskCategory/:date'
         ]
       });
     } catch (error) {

@@ -246,6 +246,33 @@ class StaffController {
       });
     }
   }
+  async getStats(req, res) {
+  try {
+    const result = await staffService.getStats();
+    
+    res.status(200).json({
+      success: true,
+      stats: result.stats
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching stats:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch stats',
+      stats: {
+        total: 0,
+        active: 0,
+        inactive: 0,
+        onLeave: 0,
+        departments: [],
+        roles: [],
+        recentHires: 0
+      }
+    });
+  }
+}
   
   async healthCheck(req, res) {
     res.status(200).json({

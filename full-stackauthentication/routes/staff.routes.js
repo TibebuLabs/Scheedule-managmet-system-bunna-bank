@@ -16,6 +16,7 @@ router.post('/check-email', staffController.checkEmail);
 router.get('/all', staffController.getAllEmployees);
 
 router.get('/:id', staffController.getEmployeeById);
+router.get('/stats', staffController.getStats);
 
 router.put(
   '/:id',

@@ -335,6 +335,7 @@ const StatsCards = ({ darkMode = false }) => {
                 </p>
               </div>
               
+              
               {/* Secondary metric */}
               <div className={`flex items-center gap-2 mb-3 p-2 rounded-lg ${
                 darkMode ? 'bg-gray-800/50' : 'bg-gray-50'
@@ -470,5 +471,6 @@ const StatsCards = ({ darkMode = false }) => {
     </div>
   );
 };
+
 
 export default StatsCards;

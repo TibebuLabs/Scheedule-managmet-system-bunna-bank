@@ -27,19 +27,19 @@ const staffSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: '',
-    match: [/^\+?[\d\s\-\(\)]{10,}$/, 'Please enter a valid phone number']
+    match: [/^(\+251|0)(9|7)[0-9]{8}$/, 'Please enter a valid Ethiopian phone number (+251XXXXXXXXX or 0XXXXXXXXX)']
   },
   role: {
     type: String,
     required: [true, 'Role is required'],
-    enum: ['Bank Manager', 'Loan Officer', 'Teller', 'Financial Advisor', 'IT Specialist', 'Staff'],
+    enum: ['Junior IT Officer', 'IT Officer', 'Senior IT Officer', 'developer', 'Database Admin', 'Staff'],
     default: 'Staff'
   },
   department: {
     type: String,
     required: [true, 'Department is required'],
-    enum: ['Management', 'Loans', 'Customer Service', 'Investments', 'IT Support'],
-    default: 'Customer Service'
+    enum: ['IT Infrastructure', 'core banking', 'Mobile application and development', 'digital channal', 'HR'],
+    default: 'IT Infrastructure'
   },
   status: {
     type: String,
@@ -68,6 +68,15 @@ staffSchema.pre('save', function(next) {
     const year = new Date().getFullYear();
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     this.employeeId = `EMP${year}${randomNum}`;
+  }
+  
+  // Format phone number to standard Ethiopian format
+  if (this.phone) {
+    this.phone = this.phone.trim();
+    // Convert 0XXXXXXXXX to +251XXXXXXXXX
+    if (this.phone.startsWith('0') && this.phone.length === 10) {
+      this.phone = '+251' + this.phone.substring(1);
+    }
   }
   
   if (this.email) {

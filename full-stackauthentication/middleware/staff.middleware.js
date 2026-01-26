@@ -4,14 +4,12 @@ const validateEmployeeData = [
   body('firstName')
     .trim()
     .notEmpty().withMessage('First name is required 👤')
-    .isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters')
-    .matches(/^[A-Za-z\s]+$/).withMessage('First name can only contain letters'),
+    .isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters'),
   
   body('lastName')
     .trim()
     .notEmpty().withMessage('Last name is required 👥')
-    .isLength({ min: 2, max: 50 }).withMessage('Last name must be 2-50 characters')
-    .matches(/^[A-Za-z\s]+$/).withMessage('Last name can only contain letters'),
+    .isLength({ min: 2, max: 50 }).withMessage('Last name must be 2-50 characters'),
   
   body('email')
     .trim()
@@ -22,14 +20,14 @@ const validateEmployeeData = [
   body('phone')
     .optional()
     .trim()
-    .matches(/^[\d\s\+\-\(\)]{10,}$/).withMessage('Please enter a valid phone number 📱'),
+    .matches(/^(\+251|0)(9|7)[0-9]{8}$/).withMessage('Please enter a valid Ethiopian phone number (+251XXXXXXXXX or 0XXXXXXXXX) 📱'),
   
   body('role')
-    .isIn(['Bank Manager', 'Loan Officer', 'Teller', 'Financial Advisor', 'IT Specialist', 'Staff'])
+    .isIn(['Junior IT Officer', 'IT Officer', 'Senior IT Officer', 'developer', 'Database Admin', 'Staff'])
     .withMessage('Please select a valid role 💼'),
   
   body('department')
-    .isIn(['Management', 'Loans', 'Customer Service', 'Investments', 'IT Support'])
+    .isIn(['IT Infrastructure', 'core banking', 'Mobile application and development', 'digital channal', 'HR'])
     .withMessage('Please select a valid department 🏢'),
   
   body('status')
@@ -42,14 +40,12 @@ const validateEmployeeUpdate = [
   body('firstName')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters')
-    .matches(/^[A-Za-z\s]+$/).withMessage('First name can only contain letters'),
+    .isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters'),
   
   body('lastName')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 50 }).withMessage('Last name must be 2-50 characters')
-    .matches(/^[A-Za-z\s]+$/).withMessage('Last name can only contain letters'),
+    .isLength({ min: 2, max: 50 }).withMessage('Last name must be 2-50 characters'),
   
   body('email')
     .optional()
@@ -60,16 +56,16 @@ const validateEmployeeUpdate = [
   body('phone')
     .optional()
     .trim()
-    .matches(/^[\d\s\+\-\(\)]{10,}$/).withMessage('Please enter a valid phone number 📱'),
+    .matches(/^(\+251|0)(9|7)[0-9]{8}$/).withMessage('Please enter a valid Ethiopian phone number (+251XXXXXXXXX or 0XXXXXXXXX) 📱'),
   
   body('role')
     .optional()
-    .isIn(['Bank Manager', 'Loan Officer', 'Teller', 'Financial Advisor', 'IT Specialist', 'Staff'])
+    .isIn(['Junior IT Officer', 'IT Officer', 'Senior IT Officer', 'developer', 'Database Admin', 'Staff'])
     .withMessage('Please select a valid role 💼'),
   
   body('department')
     .optional()
-    .isIn(['Management', 'Loans', 'Customer Service', 'Investments', 'IT Support'])
+    .isIn(['IT Infrastructure', 'core banking', 'Mobile application and development', 'digital channal', 'HR'])
     .withMessage('Please select a valid department 🏢'),
   
   body('status')
@@ -89,8 +85,8 @@ const validate = (validations) => {
     }
     
     const errorMessages = errors.array().map(err => ({
-      field: err.param,
-      message: err.msg,
+      path: err.param,
+      msg: err.msg,
       value: err.value
     }));
     

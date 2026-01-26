@@ -14,7 +14,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
     lastName: '',
     email: '',
     role: 'Staff',
-    department: 'Customer Service',
+    department: 'IT Infrastructure',
     phone: ''
   });
   const [loading, setLoading] = useState(false);
@@ -22,11 +22,13 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
   const [success, setSuccess] = useState('');
   const [touched, setTouched] = useState({});
   const [formProgress, setFormProgress] = useState(0);
+  const [serverErrors, setServerErrors] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Calculate form progress
   useEffect(() => {
     const requiredFields = ['firstName', 'lastName', 'email', 'role', 'department'];
-    const filledFields = requiredFields.filter(field => formData[field].trim() !== '');
+    const filledFields = requiredFields.filter(field => formData[field] && formData[field].trim() !== '');
     const progress = (filledFields.length / requiredFields.length) * 100;
     setFormProgress(progress);
   }, [formData]);
@@ -38,29 +40,102 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
       [name]: value
     }));
     if (error) setError('');
+    if (serverErrors.length > 0) setServerErrors([]);
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return '';
+    
+    // Remove all non-digit characters
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // Format Ethiopian phone numbers
+    if (cleaned.startsWith('251') && cleaned.length === 12) {
+      return `+${cleaned}`;
+    } else if (cleaned.startsWith('0') && cleaned.length === 10) {
+      return `+251${cleaned.substring(1)}`;
+    } else if (cleaned.startsWith('9') && cleaned.length === 9) {
+      return `+251${cleaned}`;
+    } else if (cleaned.startsWith('7') && cleaned.length === 9) {
+      return `+251${cleaned}`;
+    }
+    
+    return phone;
+  };
+
   const validateForm = () => {
     const errors = [];
+    const fieldErrs = {};
     
-    if (!formData.firstName.trim()) errors.push('First name is required');
-    if (!formData.lastName.trim()) errors.push('Last name is required');
-    if (!formData.email.trim()) errors.push('Email is required');
-    if (!formData.role.trim()) errors.push('Role is required');
-    if (!formData.department.trim()) errors.push('Department is required');
-    
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.push('Please enter a valid email address');
+    // First Name validation
+    if (!formData.firstName?.trim()) {
+      errors.push('First name is required');
+      fieldErrs.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      errors.push('First name must be at least 2 characters');
+      fieldErrs.firstName = 'First name must be at least 2 characters';
+    } else if (formData.firstName.trim().length > 50) {
+      errors.push('First name cannot exceed 50 characters');
+      fieldErrs.firstName = 'First name cannot exceed 50 characters';
     }
     
-    if (formData.phone && !/^[\d\s\+\-\(\)]+$/.test(formData.phone)) {
-      errors.push('Please enter a valid phone number');
+    // Last Name validation
+    if (!formData.lastName?.trim()) {
+      errors.push('Last name is required');
+      fieldErrs.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      errors.push('Last name must be at least 2 characters');
+      fieldErrs.lastName = 'Last name must be at least 2 characters';
+    } else if (formData.lastName.trim().length > 50) {
+      errors.push('Last name cannot exceed 50 characters');
+      fieldErrs.lastName = 'Last name cannot exceed 50 characters';
     }
     
+    // Email validation
+    if (!formData.email?.trim()) {
+      errors.push('Email is required');
+      fieldErrs.email = 'Email is required';
+    } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
+      errors.push('Please enter a valid email');
+      fieldErrs.email = 'Please enter a valid email';
+    }
+    
+    // Phone validation
+    if (formData.phone?.trim()) {
+      const formattedPhone = formatPhoneNumber(formData.phone);
+      const phoneRegex = /^(\+251|0)(9|7)[0-9]{8}$/;
+      if (!phoneRegex.test(formattedPhone)) {
+        errors.push('Please enter a valid Ethiopian phone number (+251XXXXXXXXX or 0XXXXXXXXX)');
+        fieldErrs.phone = 'Please enter a valid Ethiopian phone number (+251XXXXXXXXX or 0XXXXXXXXX)';
+      }
+    }
+    
+    // Role validation
+    if (!formData.role?.trim()) {
+      errors.push('Role is required');
+      fieldErrs.role = 'Role is required';
+    } else if (!['Junior IT Officer', 'IT Officer', 'Senior IT Officer', 'developer', 'Database Admin', 'Staff'].includes(formData.role)) {
+      errors.push('Please select a valid role');
+      fieldErrs.role = 'Please select a valid role';
+    }
+    
+    // Department validation
+    if (!formData.department?.trim()) {
+      errors.push('Department is required');
+      fieldErrs.department = 'Department is required';
+    } else if (!['IT Infrastructure', 'core banking', 'Mobile application and development', 'digital channal', 'HR'].includes(formData.department)) {
+      errors.push('Please select a valid department');
+      fieldErrs.department = 'Please select a valid department';
+    }
+    
+    setFieldErrors(fieldErrs);
     return errors;
   };
 
@@ -76,12 +151,32 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
     setLoading(true);
     setError('');
     setSuccess('');
+    setServerErrors([]);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/staff/add`, formData);
+      // Format phone number before sending
+      const formattedPhone = formData.phone ? formatPhoneNumber(formData.phone) : '';
+      
+      // Prepare payload exactly as server expects
+      const payload = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.toLowerCase().trim(),
+        role: formData.role.trim(),
+        department: formData.department.trim(),
+        phone: formattedPhone
+      };
+      
+      console.log('📤 Sending payload:', payload);
+      
+      const response = await axios.post(`${API_BASE_URL}/staff/add`, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       console.log('✅ Employee added:', response.data);
-      setSuccess(response.data.message);
+      setSuccess(response.data.message || 'Staff member added successfully!');
       
       // Reset form
       setFormData({
@@ -89,13 +184,14 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
         lastName: '',
         email: '',
         role: 'Staff',
-        department: 'Customer Service',
+        department: 'IT Infrastructure',
         phone: ''
       });
       setTouched({});
+      setFieldErrors({});
       setFormProgress(0);
       
-      if (onStaffAdded) {
+      if (onStaffAdded && response.data.employee) {
         onStaffAdded(response.data.employee);
       }
       
@@ -105,16 +201,34 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
       console.error('❌ Error adding staff:', error);
       
       if (error.response) {
-        if (error.response.data.errors) {
-          const firstError = error.response.data.errors[0];
-          setError(`${firstError.field}: ${firstError.message}`);
+        console.log('Server response:', error.response.data);
+        
+        if (error.response.data?.errors && Array.isArray(error.response.data.errors)) {
+          const serverErrs = error.response.data.errors;
+          setServerErrors(serverErrs);
+          
+          // Map server errors to field errors
+          const newFieldErrors = {};
+          serverErrs.forEach(err => {
+            if (err.path) {
+              newFieldErrors[err.path] = err.msg || err.message;
+            }
+          });
+          setFieldErrors(newFieldErrors);
+          
+          if (serverErrs.length > 0) {
+            const firstError = serverErrs[0];
+            setError(`${firstError.path || 'Error'}: ${firstError.msg || firstError.message || 'Validation error'}`);
+          }
+        } else if (error.response.data?.message) {
+          setError(error.response.data.message);
         } else {
-          setError(error.response.data.message || 'Failed to add staff member');
+          setError('Failed to add staff member. Please check the server.');
         }
       } else if (error.request) {
-        setError('Network error. Please check if server is running.');
+        setError('Network error. Please check if server is running at ' + API_BASE_URL);
       } else {
-        setError('An unexpected error occurred');
+        setError('An unexpected error occurred: ' + error.message);
       }
     } finally {
       setLoading(false);
@@ -122,15 +236,16 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
   };
 
   const handleEmailBlur = async () => {
-    if (!formData.email) return;
+    if (!formData.email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) return;
     
     try {
       const response = await axios.post(`${API_BASE_URL}/staff/check-email`, {
-        email: formData.email
+        email: formData.email.toLowerCase().trim()
       });
       
       if (!response.data.available) {
         setError('Email already registered. Please use a different email.');
+        setFieldErrors(prev => ({ ...prev, email: 'Email already registered' }));
       }
     } catch (error) {
       console.error('Error checking email:', error);
@@ -138,22 +253,31 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
   };
 
   const isFieldValid = (fieldName, value) => {
+    if (fieldErrors[fieldName]) return false;
     if (!touched[fieldName]) return true;
     
     switch (fieldName) {
       case 'firstName':
+        return value && value.trim().length >= 2 && value.trim().length <= 50;
       case 'lastName':
-        return value.trim().length >= 2;
+        return value && value.trim().length >= 2 && value.trim().length <= 50;
       case 'email':
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        return value && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value);
       case 'phone':
-        return !value || /^[\d\s\+\-\(\)]+$/.test(value);
+        if (!value) return true;
+        const formattedPhone = formatPhoneNumber(value);
+        return /^(\+251|0)(9|7)[0-9]{8}$/.test(formattedPhone);
+      case 'role':
+        return value && ['Junior IT Officer', 'IT Officer', 'Senior IT Officer', 'developer', 'Database Admin', 'Staff'].includes(value);
+      case 'department':
+        return value && ['IT Infrastructure', 'core banking', 'Mobile application and development', 'digital channal', 'HR'].includes(value);
       default:
-        return value.trim() !== '';
+        return value && value.trim() !== '';
     }
   };
 
   const getFieldStatus = (fieldName, value) => {
+    if (fieldErrors[fieldName]) return 'invalid';
     if (!touched[fieldName]) return 'idle';
     return isFieldValid(fieldName, value) ? 'valid' : 'invalid';
   };
@@ -240,6 +364,20 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                   <p className="text-sm text-rose-700/80 dark:text-rose-400/80 mt-1">
                     Please correct the highlighted fields and try again
                   </p>
+                  
+                  {serverErrors.length > 0 && (
+                    <div className="mt-3 p-3 bg-rose-50/50 dark:bg-rose-900/20 rounded-lg">
+                      <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 mb-2">Validation Issues:</p>
+                      <ul className="text-xs text-rose-600 dark:text-rose-400 space-y-1">
+                        {serverErrors.slice(0, 3).map((err, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>{err.path ? `${err.path}: ` : ''}{err.msg || err.message}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -281,6 +419,8 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       placeholder="John"
                       required
                       disabled={loading}
+                      minLength="2"
+                      maxLength="50"
                       className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('firstName', formData.firstName) === 'invalid'
                           ? 'border-rose-500 focus:ring-rose-500/30'
@@ -299,9 +439,9 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       <User className="w-5 h-5" />
                     </div>
                   </div>
-                  {getFieldStatus('firstName', formData.firstName) === 'invalid' && (
+                  {(getFieldStatus('firstName', formData.firstName) === 'invalid' || fieldErrors.firstName) && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
-                      First name must be at least 2 characters
+                      {fieldErrors.firstName || 'First name must be 2-50 characters'}
                     </p>
                   )}
                 </div>
@@ -326,6 +466,8 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       placeholder="Doe"
                       required
                       disabled={loading}
+                      minLength="2"
+                      maxLength="50"
                       className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('lastName', formData.lastName) === 'invalid'
                           ? 'border-rose-500 focus:ring-rose-500/30'
@@ -344,9 +486,9 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       <Users className="w-5 h-5" />
                     </div>
                   </div>
-                  {getFieldStatus('lastName', formData.lastName) === 'invalid' && (
+                  {(getFieldStatus('lastName', formData.lastName) === 'invalid' || fieldErrors.lastName) && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
-                      Last name must be at least 2 characters
+                      {fieldErrors.lastName || 'Last name must be 2-50 characters'}
                     </p>
                   )}
                 </div>
@@ -374,6 +516,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       placeholder="john.doe@company.com"
                       required
                       disabled={loading}
+                      pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
                       className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('email', formData.email) === 'invalid'
                           ? 'border-rose-500 focus:ring-rose-500/30'
@@ -392,9 +535,9 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       <Mail className="w-5 h-5" />
                     </div>
                   </div>
-                  {getFieldStatus('email', formData.email) === 'invalid' && (
+                  {(getFieldStatus('email', formData.email) === 'invalid' || fieldErrors.email) && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
-                      Please enter a valid email address
+                      {fieldErrors.email || 'Please enter a valid email address'}
                     </p>
                   )}
                 </div>
@@ -415,7 +558,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       value={formData.phone}
                       onChange={handleChange}
                       onBlur={() => handleBlur('phone')}
-                      placeholder="+1 (123) 456-7890"
+                      placeholder="+251920267834 or 0920267834"
                       disabled={loading}
                       className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('phone', formData.phone) === 'invalid'
@@ -435,9 +578,9 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       <Phone className="w-5 h-5" />
                     </div>
                   </div>
-                  {getFieldStatus('phone', formData.phone) === 'invalid' && (
+                  {(getFieldStatus('phone', formData.phone) === 'invalid' || fieldErrors.phone) && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
-                      Please enter a valid phone number
+                      {fieldErrors.phone || 'Please enter a valid Ethiopian phone number (+251920267834 or 0920267834)'}
                     </p>
                   )}
                 </div>
@@ -455,16 +598,23 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       value={formData.role}
                       onChange={handleChange}
                       disabled={loading}
-                      className="w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all group-hover:border-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      required
+                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        fieldErrors.role
+                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                      }`}
                     >
-                      <option value="Bank Manager" className="bg-white dark:bg-gray-800">Bank Manager</option>
-                      <option value="Loan Officer" className="bg-white dark:bg-gray-800">Loan Officer</option>
-                      <option value="Teller" className="bg-white dark:bg-gray-800">Teller</option>
-                      <option value="Financial Advisor" className="bg-white dark:bg-gray-800">Financial Advisor</option>
-                      <option value="IT Specialist" className="bg-white dark:bg-gray-800">IT Specialist</option>
+                      <option value="Junior IT Officer" className="bg-white dark:bg-gray-800">Junior IT Officer</option>
+                      <option value="IT Officer" className="bg-white dark:bg-gray-800">IT Officer</option>
+                      <option value="Senior IT Officer" className="bg-white dark:bg-gray-800">Senior IT Officer</option>
+                      <option value="developer" className="bg-white dark:bg-gray-800">Developer</option>
+                      <option value="Database Admin" className="bg-white dark:bg-gray-800">Database Admin</option>
                       <option value="Staff" className="bg-white dark:bg-gray-800">Staff</option>
                     </select>
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500">
+                    <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+                      fieldErrors.role ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-indigo-500'
+                    }`}>
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -473,6 +623,11 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       </svg>
                     </div>
                   </div>
+                  {fieldErrors.role && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                      {fieldErrors.role}
+                    </p>
+                  )}
                 </div>
 
                 {/* Department */}
@@ -488,15 +643,22 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       value={formData.department}
                       onChange={handleChange}
                       disabled={loading}
-                      className="w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all group-hover:border-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      required
+                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        fieldErrors.department
+                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                      }`}
                     >
-                      <option value="Management" className="bg-white dark:bg-gray-800">Management</option>
-                      <option value="Loans" className="bg-white dark:bg-gray-800">Loans</option>
-                      <option value="Customer Service" className="bg-white dark:bg-gray-800">Customer Service</option>
-                      <option value="Investments" className="bg-white dark:bg-gray-800">Investments</option>
-                      <option value="IT Support" className="bg-white dark:bg-gray-800">IT Support</option>
+                      <option value="IT Infrastructure" className="bg-white dark:bg-gray-800">IT Infrastructure</option>
+                      <option value="core banking" className="bg-white dark:bg-gray-800">Core Banking</option>
+                      <option value="Mobile application and development" className="bg-white dark:bg-gray-800">Mobile Application & Development</option>
+                      <option value="digital channal" className="bg-white dark:bg-gray-800">Digital Channel</option>
+                      <option value="HR" className="bg-white dark:bg-gray-800">Human Resources (HR)</option>
                     </select>
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500">
+                    <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+                      fieldErrors.department ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-indigo-500'
+                    }`}>
                       <Building className="w-5 h-5" />
                     </div>
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -505,6 +667,11 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       </svg>
                     </div>
                   </div>
+                  {fieldErrors.department && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                      {fieldErrors.department}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -554,8 +721,8 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
         </form>
       </div>
 
-      {/* Animations */}
-      <style jsx global>{`
+      {/* CSS Animations */}
+      <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }

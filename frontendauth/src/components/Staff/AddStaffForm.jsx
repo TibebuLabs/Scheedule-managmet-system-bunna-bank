@@ -3,7 +3,8 @@ import axios from 'axios';
 import { 
   User, Users, Mail, Phone, Briefcase, Building,
   X, Check, Loader2, AlertCircle, AlertTriangle,
-  ArrowLeft, UserPlus, CheckCircle, XCircle, Info
+  ArrowLeft, UserPlus, CheckCircle, XCircle, Info,
+  Star, Shield, Award, Clock
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -24,6 +25,17 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
   const [formProgress, setFormProgress] = useState(0);
   const [serverErrors, setServerErrors] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Track mouse movement for interactive effects
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Calculate form progress
   useEffect(() => {
@@ -283,39 +295,77 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
   };
 
   const RequiredStar = () => (
-    <span className="text-rose-500 ml-1" title="Required field">*</span>
+    <span className="text-[#3d1209] ml-1" title="Required field">*</span>
   );
 
   const FieldStatusIndicator = ({ status }) => {
     if (status === 'valid') {
-      return <CheckCircle className="w-4 h-4 text-emerald-500 animate-pulse" />;
+      return <CheckCircle className="w-4 h-4 text-emerald-500" />;
     }
     if (status === 'invalid') {
-      return <XCircle className="w-4 h-4 text-rose-500 animate-pulse" />;
+      return <XCircle className="w-4 h-4 text-[#3d1209]" />;
     }
     return <Info className="w-4 h-4 text-amber-500 opacity-50" />;
   };
 
   return (
     <div className="relative">
-      {/* Background Gradient Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/30 via-purple-50/20 to-pink-50/20 dark:from-indigo-900/10 dark:via-purple-900/10 dark:to-pink-900/10 rounded-3xl -z-10" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/10 via-purple-500/5 to-transparent rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-rose-500/10 via-pink-500/5 to-transparent rounded-full blur-3xl -z-10" />
+      {/* Interactive Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="absolute w-[400px] h-[400px] -top-48 -left-48 bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 rounded-full blur-3xl animate-pulse"
+          style={{
+            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+          }}
+        />
+        <div 
+          className="absolute w-[300px] h-[300px] -bottom-48 -right-48 bg-gradient-to-r from-amber-500/5 to-[#3d1209]/5 rounded-full blur-3xl animate-pulse delay-1000"
+          style={{
+            transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)`
+          }}
+        />
+        
+        {/* Floating Particles */}
+        {[...Array(10)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-[#3d1209]/10 rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `float ${20 + Math.random() * 20}s infinite linear`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          />
+        ))}
+      </div>
 
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl border border-gray-200/60 dark:border-gray-700/60 shadow-2xl shadow-indigo-500/10 dark:shadow-gray-900/40 overflow-hidden">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl overflow-hidden relative z-10">
+        {/* Decorative Header Bar */}
+        <div className="h-2 bg-gradient-to-r from-[#3d1209] via-amber-600 to-[#3d1209]"></div>
+
         {/* Header */}
-        <div className="relative p-8 border-b border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-900/20 dark:via-purple-900/20 dark:to-pink-900/20">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg animate-pulse-slow">
+        <div className="relative p-8 border-b border-gray-200/60 bg-gradient-to-r from-[#3d1209]/5 via-amber-500/5 to-[#3d1209]/5">
+          {/* Pattern Overlay */}
+          <div className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233d1209' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '30px 30px'
+            }}
+          />
+
+          <div className="relative flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-[#3d1209] to-amber-600 rounded-2xl shadow-lg">
               <UserPlus className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-indigo-700 to-purple-600 dark:from-white dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
-                Add New Staff Member
+              <h2 className="text-2xl md:text-3xl font-bold">
+                <span className="bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
+                  Add New Staff Member
+                </span>
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Complete the form below to add a new team member. All fields marked with <span className="text-rose-500 font-bold">*</span> are required.
+              <p className="text-gray-600 mt-2">
+                Complete the form below to add a new team member. All fields marked with <span className="text-[#3d1209] font-bold">*</span> are required.
               </p>
             </div>
           </div>
@@ -323,12 +373,12 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
           {/* Progress Bar */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Form Progress</span>
-              <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{Math.round(formProgress)}%</span>
+              <span className="text-sm font-semibold text-gray-700">Form Progress</span>
+              <span className="text-sm font-bold text-[#3d1209]">{Math.round(formProgress)}%</span>
             </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-[#3d1209] to-amber-600 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${formProgress}%` }}
               />
             </div>
@@ -339,13 +389,13 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
         <div className="px-8 pt-6">
           {success && (
             <div className="mb-6 animate-fade-in">
-              <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl shadow-lg">
-                <div className="p-2 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full animate-bounce">
+              <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl shadow-lg">
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full animate-bounce">
                   <Check className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-emerald-800 dark:text-emerald-300 text-lg">{success}</p>
-                  <p className="text-sm text-emerald-700/80 dark:text-emerald-400/80 mt-1">
+                  <p className="font-bold text-emerald-800 text-lg">{success}</p>
+                  <p className="text-sm text-emerald-700/80 mt-1">
                     Staff member has been successfully registered in the system
                   </p>
                 </div>
@@ -355,20 +405,20 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
           {error && (
             <div className="mb-6 animate-fade-in">
-              <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/30 dark:to-pink-900/30 border-2 border-rose-200 dark:border-rose-800 rounded-2xl shadow-lg">
-                <div className="p-2 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full">
+              <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-rose-50 to-orange-50 border-2 border-[#3d1209]/20 rounded-2xl shadow-lg">
+                <div className="p-2 bg-gradient-to-br from-[#3d1209] to-amber-600 rounded-full">
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-rose-800 dark:text-rose-300 text-lg">{error}</p>
-                  <p className="text-sm text-rose-700/80 dark:text-rose-400/80 mt-1">
+                  <p className="font-bold text-[#3d1209] text-lg">{error}</p>
+                  <p className="text-sm text-gray-600 mt-1">
                     Please correct the highlighted fields and try again
                   </p>
                   
                   {serverErrors.length > 0 && (
-                    <div className="mt-3 p-3 bg-rose-50/50 dark:bg-rose-900/20 rounded-lg">
-                      <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 mb-2">Validation Issues:</p>
-                      <ul className="text-xs text-rose-600 dark:text-rose-400 space-y-1">
+                    <div className="mt-3 p-3 bg-[#3d1209]/5 rounded-lg">
+                      <p className="text-xs font-semibold text-[#3d1209] mb-2">Validation Issues:</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
                         {serverErrors.slice(0, 3).map((err, index) => (
                           <li key={index} className="flex items-start">
                             <span className="mr-2">•</span>
@@ -389,11 +439,11 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
             {/* Personal Information Section */}
             <div className="animate-slide-in-up">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl">
-                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2 bg-gradient-to-br from-[#3d1209]/10 to-amber-500/10 rounded-xl">
+                  <User className="w-5 h-5 text-[#3d1209]" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Staff Information</h3>
-                <span className="ml-2 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full">
+                <h3 className="text-lg font-bold text-gray-900">Staff Information</h3>
+                <span className="ml-2 px-2 py-1 bg-[#3d1209]/10 text-[#3d1209] text-xs font-semibold rounded-full">
                   Required
                 </span>
               </div>
@@ -401,7 +451,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <User className="w-4 h-4 text-gray-500" />
                     First Name
                     <RequiredStar />
@@ -421,26 +471,26 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       disabled={loading}
                       minLength="2"
                       maxLength="50"
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('firstName', formData.firstName) === 'invalid'
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : getFieldStatus('firstName', formData.firstName) === 'valid'
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
                       getFieldStatus('firstName', formData.firstName) === 'invalid'
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : getFieldStatus('firstName', formData.firstName) === 'valid'
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-indigo-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <User className="w-5 h-5" />
                     </div>
                   </div>
                   {(getFieldStatus('firstName', formData.firstName) === 'invalid' || fieldErrors.firstName) && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.firstName || 'First name must be 2-50 characters'}
                     </p>
                   )}
@@ -448,7 +498,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
                 {/* Last Name */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Users className="w-4 h-4 text-gray-500" />
                     Last Name
                     <RequiredStar />
@@ -468,26 +518,26 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       disabled={loading}
                       minLength="2"
                       maxLength="50"
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('lastName', formData.lastName) === 'invalid'
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : getFieldStatus('lastName', formData.lastName) === 'valid'
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
                       getFieldStatus('lastName', formData.lastName) === 'invalid'
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : getFieldStatus('lastName', formData.lastName) === 'valid'
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-indigo-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <Users className="w-5 h-5" />
                     </div>
                   </div>
                   {(getFieldStatus('lastName', formData.lastName) === 'invalid' || fieldErrors.lastName) && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.lastName || 'Last name must be 2-50 characters'}
                     </p>
                   )}
@@ -495,7 +545,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Mail className="w-4 h-4 text-gray-500" />
                     Email Address
                     <RequiredStar />
@@ -517,26 +567,26 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       required
                       disabled={loading}
                       pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('email', formData.email) === 'invalid'
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : getFieldStatus('email', formData.email) === 'valid'
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
                       getFieldStatus('email', formData.email) === 'invalid'
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : getFieldStatus('email', formData.email) === 'valid'
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-indigo-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <Mail className="w-5 h-5" />
                     </div>
                   </div>
                   {(getFieldStatus('email', formData.email) === 'invalid' || fieldErrors.email) && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.email || 'Please enter a valid email address'}
                     </p>
                   )}
@@ -544,7 +594,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
                 {/* Phone */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Phone className="w-4 h-4 text-gray-500" />
                     Phone Number
                     <span className="ml-auto">
@@ -560,26 +610,26 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       onBlur={() => handleBlur('phone')}
                       placeholder="+251920267834 or 0920267834"
                       disabled={loading}
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         getFieldStatus('phone', formData.phone) === 'invalid'
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : getFieldStatus('phone', formData.phone) === 'valid'
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
                       getFieldStatus('phone', formData.phone) === 'invalid'
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : getFieldStatus('phone', formData.phone) === 'valid'
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-indigo-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <Phone className="w-5 h-5" />
                     </div>
                   </div>
                   {(getFieldStatus('phone', formData.phone) === 'invalid' || fieldErrors.phone) && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.phone || 'Please enter a valid Ethiopian phone number (+251920267834 or 0920267834)'}
                     </p>
                   )}
@@ -587,7 +637,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
                 {/* Role */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Briefcase className="w-4 h-4 text-gray-500" />
                     Role / Position
                     <RequiredStar />
@@ -599,21 +649,21 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       onChange={handleChange}
                       disabled={loading}
                       required
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         fieldErrors.role
-                          ? 'border-rose-500 focus:ring-rose-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     >
-                      <option value="Junior IT Officer" className="bg-white dark:bg-gray-800">Junior IT Officer</option>
-                      <option value="IT Officer" className="bg-white dark:bg-gray-800">IT Officer</option>
-                      <option value="Senior IT Officer" className="bg-white dark:bg-gray-800">Senior IT Officer</option>
-                      <option value="developer" className="bg-white dark:bg-gray-800">Developer</option>
-                      <option value="Database Admin" className="bg-white dark:bg-gray-800">Database Admin</option>
-                      <option value="Staff" className="bg-white dark:bg-gray-800">Staff</option>
+                      <option value="Junior IT Officer">Junior IT Officer</option>
+                      <option value="IT Officer">IT Officer</option>
+                      <option value="Senior IT Officer">Senior IT Officer</option>
+                      <option value="developer">Developer</option>
+                      <option value="Database Admin">Database Admin</option>
+                      <option value="Staff">Staff</option>
                     </select>
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                      fieldErrors.role ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-indigo-500'
+                      fieldErrors.role ? 'text-[#3d1209]' : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <Briefcase className="w-5 h-5" />
                     </div>
@@ -624,7 +674,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                     </div>
                   </div>
                   {fieldErrors.role && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.role}
                     </p>
                   )}
@@ -632,7 +682,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
                 {/* Department */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Building className="w-4 h-4 text-gray-500" />
                     Department
                     <RequiredStar />
@@ -644,20 +694,20 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                       onChange={handleChange}
                       disabled={loading}
                       required
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 appearance-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         fieldErrors.department
-                          ? 'border-rose-500 focus:ring-rose-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500/30 group-hover:border-indigo-400'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     >
-                      <option value="IT Infrastructure" className="bg-white dark:bg-gray-800">IT Infrastructure</option>
-                      <option value="core banking" className="bg-white dark:bg-gray-800">Core Banking</option>
-                      <option value="Mobile application and development" className="bg-white dark:bg-gray-800">Mobile Application & Development</option>
-                      <option value="digital channal" className="bg-white dark:bg-gray-800">Digital Channel</option>
-                      <option value="HR" className="bg-white dark:bg-gray-800">Human Resources (HR)</option>
+                      <option value="IT Infrastructure">IT Infrastructure</option>
+                      <option value="core banking">Core Banking</option>
+                      <option value="Mobile application and development">Mobile Application & Development</option>
+                      <option value="digital channal">Digital Channel</option>
+                      <option value="HR">Human Resources (HR)</option>
                     </select>
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                      fieldErrors.department ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-indigo-500'
+                      fieldErrors.department ? 'text-[#3d1209]' : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <Building className="w-5 h-5" />
                     </div>
@@ -668,7 +718,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                     </div>
                   </div>
                   {fieldErrors.department && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                    <p className="text-xs text-[#3d1209]">
                       {fieldErrors.department}
                     </p>
                   )}
@@ -678,10 +728,10 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
           </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-gray-200/60 dark:border-gray-700/60">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-gray-200/60">
+            <div className="text-sm text-gray-600">
               <p className="flex items-center gap-2">
-                <span className="text-rose-500 font-bold">*</span>
+                <span className="text-[#3d1209] font-bold">*</span>
                 <span>Indicates required field</span>
               </p>
             </div>
@@ -691,7 +741,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                 type="button" 
                 onClick={onCancel}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Cancel
@@ -700,8 +750,9 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="group relative flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                className="group relative flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-gradient-to-r from-[#3d1209] to-amber-600 hover:from-[#4d170c] hover:to-amber-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none overflow-hidden"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -711,8 +762,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
                   <>
                     <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     <span>Add Staff Member</span>
-                    <div className="absolute inset-0 rounded-xl border-2 border-white/30 group-hover:border-white/50 transition-colors" />
-                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#3d1209]/20 via-amber-500/20 to-[#3d1209]/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </>
                 )}
               </button>
@@ -723,6 +773,12 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
 
       {/* CSS Animations */}
       <style>{`
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+          100% { transform: translateY(0px) rotate(360deg); }
+        }
+        
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -733,11 +789,6 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
           to { opacity: 1; transform: translateY(0); }
         }
         
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        
         .animate-fade-in {
           animation: fade-in 0.5s ease-out;
         }
@@ -746,8 +797,8 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
           animation: slide-in-up 0.6s ease-out;
         }
         
-        .animate-pulse-slow {
-          animation: pulse-slow 2s ease-in-out infinite;
+        .animation-delay-1000 {
+          animation-delay: 1000ms;
         }
       `}</style>
     </div>

@@ -1,6 +1,7 @@
 const Schedule = require('../models/Schedule.model');
 const Task = require('../models/Task.model');
 const Staff = require('../models/Staff.model');
+const emailService = require('./email.service');
 const { startOfWeek, endOfWeek } = require('date-fns');
 
 class ScheduleService {
@@ -185,33 +186,35 @@ class ScheduleService {
 
     for (const assignment of schedule.assignments) {
       try {
-        // Simulate email sending (replace with actual email service)
         console.log(`📧 Sending email to: ${assignment.email}`);
-        
-        // Update assignment status
-        assignment.notificationSent = true;
-        assignment.notificationSentAt = new Date();
-        assignment.emailStatus = 'sent';
-        
-        successfulCount++;
-        
-        notificationResults.push({
-          success: true,
-          staffName: assignment.staffName,
-          email: assignment.email,
-          sentAt: new Date()
-        });
-        
-        // Simulate slight delay
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+
+        const subject = `Task Assignment: ${schedule.taskTitle} — ${schedule.scheduleId}`;
+        const html = emailService.generateTaskAssignmentTemplate(schedule, assignment);
+        const result = await emailService.sendEmail(assignment.email, subject, html);
+
+        if (result.success) {
+          assignment.notificationSent = true;
+          assignment.notificationSentAt = new Date();
+          assignment.emailStatus = 'sent';
+          successfulCount++;
+          notificationResults.push({
+            success: true,
+            staffName: assignment.staffName,
+            email: assignment.email,
+            messageId: result.messageId,
+            sentAt: new Date()
+          });
+        } else {
+          throw new Error(result.error || 'Email delivery failed');
+        }
+
       } catch (emailError) {
-        console.error(`❌ Failed to send email to ${assignment.email}:`, emailError);
-        
+        console.error(`❌ Failed to send email to ${assignment.email}:`, emailError.message);
+
         assignment.notificationSent = false;
         assignment.emailStatus = 'failed';
         assignment.emailError = emailError.message;
-        
+
         notificationResults.push({
           success: false,
           staffName: assignment.staffName,

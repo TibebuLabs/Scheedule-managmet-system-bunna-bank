@@ -37,6 +37,12 @@ const assignmentSchema = new mongoose.Schema({
     default: false
   },
   notificationSentAt: Date,
+  emailStatus: {
+    type: String,
+    enum: ['pending', 'sent', 'failed'],
+    default: 'pending'
+  },
+  emailError: String,
   rotationStatus: {
     type: String,
     enum: ['new', 'rotated', 'maintained'],
@@ -123,6 +129,11 @@ const scheduleSchema = new mongoose.Schema({
   emailSent: {
     type: Boolean,
     default: false
+  },
+  emailStatus: {
+    type: String,
+    enum: ['pending', 'all_sent', 'partial_sent', 'failed'],
+    default: 'pending'
   },
   lastNotificationSent: Date,
   attachments: [{

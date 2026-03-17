@@ -993,6 +993,15 @@ class EmailService {
         : '0%'
     };
   }
+
+  // 🔄 Reset email statistics
+  resetStats() {
+    this.stats = {
+      emailsSent: 0,
+      emailsFailed: 0,
+      lastSent: null
+    };
+  }
 }
 
 module.exports = new EmailService();

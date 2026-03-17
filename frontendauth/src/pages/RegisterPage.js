@@ -669,7 +669,7 @@ const RegisterPage = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                    <span className="text-gray-500 text-sm">+1</span>
+                    <span className="text-gray-500 text-sm">+251</span>
                   </div>
                   <input
                     type="tel"

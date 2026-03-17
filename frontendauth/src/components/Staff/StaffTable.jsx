@@ -24,6 +24,17 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
   });
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [staffDetails, setStaffDetails] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Track mouse movement for interactive effects
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const fetchStaffMembers = async () => {
     try {
@@ -55,7 +66,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
   };
 
   const getRandomColor = () => {
-    const colors = ['#4A90E2', '#50C878', '#FF6B6B', '#FFA500', '#9B59B6', '#1ABC9C'];
+    const colors = ['#3d1209', '#5a1b0e', '#8b4513', '#a0522d', '#b85e3a', '#c17b5c'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
@@ -165,9 +176,9 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
   const getStatusColor = (status) => {
     const displayStatus = getDisplayStatus(status);
     switch (displayStatus) {
-      case 'active': return 'success';
-      case 'on leave': return 'warning';
-      case 'inactive': return 'danger';
+      case 'active': return 'active';
+      case 'on leave': return 'on-leave';
+      case 'inactive': return 'inactive';
       default: return 'secondary';
     }
   };
@@ -253,29 +264,65 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
     return (
       <div className="staff-management">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading staff members...</p>
+          <div className="loading-spinner" style={{ borderColor: '#3d1209', borderTopColor: '#f59e0b' }}></div>
+          <p style={{ color: '#3d1209' }}>Loading staff members...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="staff-management">
+    <div className="staff-management" style={{ backgroundColor: '#fdf8f5' }}>
+      {/* Interactive Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div 
+          className="absolute w-[600px] h-[600px] -top-48 -left-48 bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 rounded-full blur-3xl animate-pulse"
+          style={{
+            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+          }}
+        />
+        <div 
+          className="absolute w-[500px] h-[500px] -bottom-48 -right-48 bg-gradient-to-r from-amber-500/5 to-[#3d1209]/5 rounded-full blur-3xl animate-pulse delay-1000"
+          style={{
+            transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)`
+          }}
+        />
+        
+        {/* Floating Particles */}
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-[#3d1209]/10 rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `float ${20 + Math.random() * 20}s infinite linear`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          />
+        ))}
+      </div>
+
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal-overlay">
-          <div className="modal-content success">
-            <div className="modal-header">
-              <h3>✅ {modalContent.title}</h3>
+          <div className="modal-content success" style={{ borderTop: '4px solid #10b981' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
+              <h3 style={{ color: '#3d1209' }}>✅ {modalContent.title}</h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
-              <p>{modalContent.message}</p>
-              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+              <p style={{ color: '#5a1b0e' }}>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details" style={{ color: '#8b4513' }}>{modalContent.details}</p>}
             </div>
-            <div className="modal-footer">
-              <button className="modal-button confirm" onClick={closeModal}>OK</button>
+            <div className="modal-footer" style={{ borderTop: '1px solid #f0e9e5' }}>
+              <button 
+                className="modal-button confirm" 
+                onClick={closeModal}
+                style={{ backgroundColor: '#3d1209', color: 'white' }}
+              >
+                OK
+              </button>
             </div>
           </div>
         </div>
@@ -284,17 +331,23 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       {/* Error Modal */}
       {showErrorModal && (
         <div className="modal-overlay">
-          <div className="modal-content error">
-            <div className="modal-header">
-              <h3>❌ {modalContent.title}</h3>
+          <div className="modal-content error" style={{ borderTop: '4px solid #dc2626' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
+              <h3 style={{ color: '#3d1209' }}>❌ {modalContent.title}</h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
-              <p>{modalContent.message}</p>
-              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+              <p style={{ color: '#5a1b0e' }}>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details" style={{ color: '#8b4513' }}>{modalContent.details}</p>}
             </div>
-            <div className="modal-footer">
-              <button className="modal-button confirm" onClick={closeModal}>OK</button>
+            <div className="modal-footer" style={{ borderTop: '1px solid #f0e9e5' }}>
+              <button 
+                className="modal-button confirm" 
+                onClick={closeModal}
+                style={{ backgroundColor: '#3d1209', color: 'white' }}
+              >
+                OK
+              </button>
             </div>
           </div>
         </div>
@@ -303,18 +356,30 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
-          <div className="modal-content warning">
-            <div className="modal-header">
-              <h3>⚠️ {modalContent.title}</h3>
+          <div className="modal-content warning" style={{ borderTop: '4px solid #f59e0b' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
+              <h3 style={{ color: '#3d1209' }}>⚠️ {modalContent.title}</h3>
               <button className="modal-close" onClick={cancelDelete}>×</button>
             </div>
             <div className="modal-body">
-              <p>{modalContent.message}</p>
-              {modalContent.details && <p className="modal-details">{modalContent.details}</p>}
+              <p style={{ color: '#5a1b0e' }}>{modalContent.message}</p>
+              {modalContent.details && <p className="modal-details" style={{ color: '#8b4513' }}>{modalContent.details}</p>}
             </div>
-            <div className="modal-footer">
-              <button className="modal-button cancel" onClick={cancelDelete}>Cancel</button>
-              <button className="modal-button delete" onClick={confirmDelete}>Delete</button>
+            <div className="modal-footer" style={{ borderTop: '1px solid #f0e9e5' }}>
+              <button 
+                className="modal-button cancel" 
+                onClick={cancelDelete}
+                style={{ backgroundColor: '#e5e7eb', color: '#3d1209' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="modal-button delete" 
+                onClick={confirmDelete}
+                style={{ backgroundColor: '#dc2626', color: 'white' }}
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
@@ -323,27 +388,40 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       {/* Details Modal */}
       {showDetailsModal && staffDetails && (
         <div className="modal-overlay">
-          <div className="modal-content info">
-            <div className="modal-header">
-              <h3>👤 {modalContent.title}</h3>
+          <div className="modal-content info" style={{ borderTop: '4px solid #3d1209' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
+              <h3 style={{ color: '#3d1209' }}>👤 {modalContent.title}</h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
               <div className="staff-details-modal">
-                <div className="staff-avatar-large" style={{ backgroundColor: staffDetails.avatarColor }}>
+                <div 
+                  className="staff-avatar-large" 
+                  style={{ 
+                    backgroundColor: staffDetails.avatarColor,
+                    color: 'white',
+                    boxShadow: '0 4px 12px rgba(61, 18, 9, 0.2)'
+                  }}
+                >
                   {staffDetails.firstName.charAt(0)}
                 </div>
                 <div className="staff-info-list">
                   {modalContent.details.split('\n').map((line, index) => (
-                    <div key={index} className="detail-item">
+                    <div key={index} className="detail-item" style={{ color: '#5a1b0e' }}>
                       {line.trim()}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="modal-button confirm" onClick={closeModal}>Close</button>
+            <div className="modal-footer" style={{ borderTop: '1px solid #f0e9e5' }}>
+              <button 
+                className="modal-button confirm" 
+                onClick={closeModal}
+                style={{ backgroundColor: '#3d1209', color: 'white' }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -351,13 +429,20 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
 
       <div className="staff-header">
         <div className="header-content">
-          <h2>👥 Staff Members</h2>
-          <p>Manage your team members and their details</p>
-          <div className="total-stats">
+          <h2 style={{ color: '#3d1209' }}>👥 Staff Members</h2>
+          <p style={{ color: '#5a1b0e' }}>Manage your team members and their details</p>
+          <div className="total-stats" style={{ color: '#8b4513', backgroundColor: '#f0e9e5' }}>
             Total: {staffMembers.length} staff members
           </div>
         </div>
-        <button className="add-staff-button" onClick={onAddStaff}>
+        <button 
+          className="add-staff-button" 
+          onClick={onAddStaff}
+          style={{ 
+            background: 'linear-gradient(to right, #3d1209, #5a1b0e)',
+            color: 'white'
+          }}
+        >
           <span className="plus-icon">+</span>
           <span>Add Staff</span>
         </button>
@@ -372,14 +457,24 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
+            style={{ 
+              border: '2px solid #e6d7cf',
+              borderRadius: '12px',
+              color: '#3d1209'
+            }}
           />
         </div>
         <div className="filter-buttons">
           {['all', 'active', 'on leave', 'inactive'].map(status => (
             <button
               key={status}
-              className={`filter-button ${filterStatus === status ? 'active' : ''} ${getStatusColor(status)}`}
+              className={`filter-button ${filterStatus === status ? 'active' : ''}`}
               onClick={() => setFilterStatus(status)}
+              style={{
+                backgroundColor: filterStatus === status ? '#3d1209' : 'transparent',
+                color: filterStatus === status ? 'white' : '#3d1209',
+                borderColor: '#3d1209'
+              }}
             >
               {status === 'all' ? 'All Staff' : status}
             </button>
@@ -387,36 +482,36 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         </div>
       </div>
 
-      <div className="staff-table-container">
+      <div className="staff-table-container" style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(61, 18, 9, 0.1)' }}>
         <div className="table-responsive">
           <table className="staff-table">
             <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Department</th>
-                <th>Phone Number</th>
-                <th>Status</th>
-                <th>Actions</th>
+              <tr style={{ background: '#f9f5f2' }}>
+                <th style={{ color: '#3d1209' }}>Name</th>
+                <th style={{ color: '#3d1209' }}>Email</th>
+                <th style={{ color: '#3d1209' }}>Role</th>
+                <th style={{ color: '#3d1209' }}>Department</th>
+                <th style={{ color: '#3d1209' }}>Phone Number</th>
+                <th style={{ color: '#3d1209' }}>Status</th>
+                <th style={{ color: '#3d1209' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="no-data">
+                  <td colSpan="7" className="no-data" style={{ color: '#5a1b0e' }}>
                     {searchQuery ? 'No staff members found matching your search' : 'No staff members found'}
                   </td>
                 </tr>
               ) : (
                 filteredStaff.map(staff => (
-                  <tr key={staff.id} className="staff-row">
+                  <tr key={staff.id} className="staff-row" style={{ borderBottom: '1px solid #f0e9e5' }}>
                     <td>
                       {editingId === staff.id ? (
                         <div className="staff-info editable">
                           <div 
                             className="staff-avatar"
-                            style={{ backgroundColor: staff.avatarColor }}
+                            style={{ backgroundColor: staff.avatarColor, color: 'white' }}
                           >
                             {staff.firstName.charAt(0)}
                           </div>
@@ -429,6 +524,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="edit-input"
                               placeholder="First Name"
                               required
+                              style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                             />
                             <input
                               type="text"
@@ -438,6 +534,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="edit-input"
                               placeholder="Last Name"
                               required
+                              style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                             />
                           </div>
                         </div>
@@ -445,13 +542,13 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                         <div className="staff-info">
                           <div 
                             className="staff-avatar"
-                            style={{ backgroundColor: staff.avatarColor }}
+                            style={{ backgroundColor: staff.avatarColor, color: 'white' }}
                           >
                             {staff.firstName.charAt(0)}
                           </div>
                           <div className="staff-details">
-                            <div className="staff-name">{staff.firstName} {staff.lastName}</div>
-                            <div className="staff-id">ID: {staff.employeeId || 'N/A'}</div>
+                            <div className="staff-name" style={{ color: '#3d1209' }}>{staff.firstName} {staff.lastName}</div>
+                            <div className="staff-id" style={{ color: '#8b4513' }}>ID: {staff.employeeId || 'N/A'}</div>
                           </div>
                         </div>
                       )}
@@ -466,9 +563,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                           className="edit-input"
                           placeholder="Email"
                           required
+                          style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                         />
                       ) : (
-                        <div className="staff-email">{staff.email}</div>
+                        <div className="staff-email" style={{ color: '#5a1b0e' }}>{staff.email}</div>
                       )}
                     </td>
                     <td>
@@ -481,9 +579,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                           className="edit-input"
                           placeholder="Role"
                           required
+                          style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                         />
                       ) : (
-                        <div className="staff-role">
+                        <div className="staff-role" style={{ color: '#5a1b0e' }}>
                           <span className="role-icon">💼</span>
                           {staff.role}
                         </div>
@@ -499,9 +598,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                           className="edit-input"
                           placeholder="Department"
                           required
+                          style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                         />
                       ) : (
-                        <span className="department-badge">{staff.department}</span>
+                        <span className="department-badge" style={{ color: '#8b4513' }}>{staff.department}</span>
                       )}
                     </td>
                     <td>
@@ -513,9 +613,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                           onChange={handleEditFormChange}
                           className="edit-input"
                           placeholder="Phone Number"
+                          style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                         />
                       ) : (
-                        <div className="phone-number">
+                        <div className="phone-number" style={{ color: '#5a1b0e' }}>
                           <span className="phone-icon">📱</span>
                           {formatPhoneNumber(staff.phone)}
                         </div>
@@ -528,13 +629,25 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                           value={editFormData.status}
                           onChange={handleEditFormChange}
                           className="status-select"
+                          style={{ border: '2px solid #e6d7cf', borderRadius: '8px', color: '#3d1209' }}
                         >
                           <option value="Active">Active</option>
                           <option value="On Leave">On Leave</option>
                           <option value="Inactive">Inactive</option>
                         </select>
                       ) : (
-                        <span className={`status-badge ${getStatusColor(staff.status)}`}>
+                        <span className={`status-badge ${getStatusColor(staff.status)}`} 
+                          style={{
+                            backgroundColor: getDisplayStatus(staff.status) === 'active' ? '#10b98120' : 
+                                           getDisplayStatus(staff.status) === 'on leave' ? '#f59e0b20' : '#ef444420',
+                            color: getDisplayStatus(staff.status) === 'active' ? '#059669' : 
+                                   getDisplayStatus(staff.status) === 'on leave' ? '#d97706' : '#dc2626',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            fontWeight: '500'
+                          }}
+                        >
                           {getDisplayStatus(staff.status)}
                         </span>
                       )}
@@ -547,6 +660,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="action-button save" 
                               title="Save Changes"
                               onClick={() => handleSaveClick(staff.id)}
+                              style={{ backgroundColor: '#10b98120', color: '#059669' }}
                             >
                               <span>💾</span>
                             </button>
@@ -554,6 +668,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="action-button cancel" 
                               title="Cancel"
                               onClick={handleCancelClick}
+                              style={{ backgroundColor: '#ef444420', color: '#dc2626' }}
                             >
                               <span>❌</span>
                             </button>
@@ -564,6 +679,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="action-button edit" 
                               title="Edit"
                               onClick={() => handleEditClick(staff)}
+                              style={{ backgroundColor: '#3d120920', color: '#3d1209' }}
                             >
                               <span>✏️</span>
                             </button>
@@ -571,6 +687,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="action-button delete" 
                               title="Delete"
                               onClick={() => handleDeleteClick(staff.id, `${staff.firstName} ${staff.lastName}`)}
+                              style={{ backgroundColor: '#ef444420', color: '#dc2626' }}
                             >
                               <span>🗑️</span>
                             </button>
@@ -578,6 +695,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               className="action-button view" 
                               title="View Details"
                               onClick={() => handleViewDetails(staff)}
+                              style={{ backgroundColor: '#3d120920', color: '#3d1209' }}
                             >
                               <span>👁️</span>
                             </button>
@@ -594,17 +712,25 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       </div>
 
       <div className="table-footer">
-        <div className="table-stats">
+        <div className="table-stats" style={{ color: '#5a1b0e' }}>
           Showing {filteredStaff.length} of {staffMembers.length} staff members
         </div>
         <div className="table-pagination">
-          <button className="pagination-button prev">← Previous</button>
+          <button className="pagination-button prev" style={{ color: '#3d1209' }}>← Previous</button>
           <div className="page-numbers">
-            <span className="page-number active">1</span>
+            <span className="page-number active" style={{ backgroundColor: '#3d1209', color: 'white' }}>1</span>
           </div>
-          <button className="pagination-button next">Next →</button>
+          <button className="pagination-button next" style={{ color: '#3d1209' }}>Next →</button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+          100% { transform: translateY(0px) rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

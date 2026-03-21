@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import Header from '../components/Header/Header';
 import WelcomeBanner from '../components/Dashboard/WelcomeBanner';
@@ -23,6 +24,7 @@ import {
 
 const Dashboard = ({ darkMode, setDarkMode }) => {
   const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -32,24 +34,49 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
   const [showWelcomeToast, setShowWelcomeToast] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
-  // User state
-  const [currentUser, setCurrentUser] = useState({
-    id: 'admin-001',
-    fullName: 'Admin User',
-    email: 'admin@bunnabank.com',
-    phone: '+251 912 345 678',
-    department: 'IT Department',
-    position: 'System Administrator',
-    joinDate: '2023-01-15',
-    bio: 'Experienced IT professional specializing in system administration and task management solutions.',
-    skills: ['System Administration', 'Task Management', 'JavaScript', 'React', 'Node.js'],
-    avatar: 'https://via.placeholder.com/150'
+  // User state — populated from AuthContext
+  const [currentUser, setCurrentUser] = useState(() => {
+    const stored = authUser || JSON.parse(localStorage.getItem('user') || '{}');
+    return {
+      id: stored._id || stored.id || '',
+      fullName: stored.firstName && stored.lastName
+        ? `${stored.firstName} ${stored.lastName}`
+        : stored.fullName || stored.email || 'Admin',
+      email: stored.email || '',
+      phone: stored.phone || '',
+      department: stored.department || 'Administration',
+      position: stored.role || 'Administrator',
+      joinDate: stored.createdAt ? stored.createdAt.split('T')[0] : '',
+      bio: stored.bio || '',
+      skills: stored.skills || [],
+      avatar: stored.avatar || ''
+    };
   });
   
   // Dark mode handling
   const [localDarkMode, setLocalDarkMode] = useState(darkMode || false);
   const effectiveDarkMode = darkMode !== undefined ? darkMode : localDarkMode;
   const effectiveSetDarkMode = setDarkMode || setLocalDarkMode;
+
+  // Sync currentUser when authUser changes
+  useEffect(() => {
+    if (authUser) {
+      setCurrentUser({
+        id: authUser._id || authUser.id || '',
+        fullName: authUser.firstName && authUser.lastName
+          ? `${authUser.firstName} ${authUser.lastName}`
+          : authUser.fullName || authUser.email || 'Admin',
+        email: authUser.email || '',
+        phone: authUser.phone || '',
+        department: authUser.department || 'Administration',
+        position: authUser.role || 'Administrator',
+        joinDate: authUser.createdAt ? authUser.createdAt.split('T')[0] : '',
+        bio: authUser.bio || '',
+        skills: authUser.skills || [],
+        avatar: authUser.avatar || ''
+      });
+    }
+  }, [authUser]);
 
   // Track mouse movement for interactive effects
   useEffect(() => {
@@ -229,6 +256,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
 
   const handleLogout = () => {
+    logout();
     navigate('/login');
   };
 

@@ -834,6 +834,68 @@ class ScheduleService {
     }
   }
 
+  // 🔄 UPDATE SCHEDULE STATUS
+  async updateScheduleStatus(id, status) {
+    try {
+      const schedule = await Schedule.findById(id);
+      if (!schedule) {
+        throw new Error('Schedule not found');
+      }
+
+      const validStatuses = ['scheduled', 'in-progress', 'in progress', 'completed', 'cancelled', 'overdue'];
+      if (!validStatuses.includes(status)) {
+        throw new Error(`Invalid status: ${status}`);
+      }
+
+      // Normalize "in progress" to "in-progress" for DB
+      schedule.status = status === 'in progress' ? 'in-progress' : status;
+      await schedule.save();
+
+      return {
+        success: true,
+        message: `Schedule status updated to ${status}`,
+        data: schedule
+      };
+    } catch (error) {
+      console.error('❌ Error updating schedule status:', error);
+      throw error;
+    }
+  }
+
+  // 🔄 UPDATE ASSIGNMENT STATUS
+  async updateAssignmentStatus(scheduleId, staffId, updateData) {
+    try {
+      const schedule = await Schedule.findById(scheduleId);
+      if (!schedule) {
+        throw new Error('Schedule not found');
+      }
+
+      const assignment = schedule.assignments.find(
+        a => a.staffId.toString() === staffId.toString()
+      );
+
+      if (!assignment) {
+        throw new Error('Assignment not found for this staff member');
+      }
+
+      if (updateData.status) assignment.status = updateData.status;
+      if (updateData.notes) assignment.notes = updateData.notes;
+      if (updateData.hoursWorked !== undefined) assignment.hoursWorked = updateData.hoursWorked;
+      if (updateData.status === 'completed') assignment.completedAt = new Date();
+
+      await schedule.save();
+
+      return {
+        success: true,
+        message: 'Assignment status updated successfully',
+        data: { scheduleId, staffId, assignment }
+      };
+    } catch (error) {
+      console.error('❌ Error updating assignment status:', error);
+      throw error;
+    }
+  }
+
   // 🔄 CHECK CONSECUTIVE WEEK RESTRICTION
   async checkConsecutiveWeekRestriction(staffId, taskCategory, date) {
     try {

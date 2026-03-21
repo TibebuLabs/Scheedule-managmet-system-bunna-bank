@@ -47,6 +47,9 @@ router.get('/:id', validateIdParam, scheduleController.getScheduleById);
 // Update schedule
 router.put('/:id', validateIdParam, validateScheduleUpdate, scheduleController.updateSchedule);
 
+// Update schedule status
+router.patch('/:id/status', validateIdParam, scheduleController.updateScheduleStatus);
+
 // Delete schedule
 router.delete('/:id', validateIdParam, scheduleController.deleteSchedule);
 

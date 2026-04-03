@@ -375,6 +375,42 @@ class ScheduleController {
     }
   }
 
+  // 🔄 UPDATE SCHEDULE STATUS
+  async updateScheduleStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return res.status(400).json({
+          success: false,
+          message: 'Status is required',
+          code: 'MISSING_STATUS',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const result = await scheduleService.updateScheduleStatus(id, status);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('❌ Error updating schedule status:', error);
+      if (error.message === 'Schedule not found') {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+          code: 'SCHEDULE_NOT_FOUND',
+          timestamp: new Date().toISOString()
+        });
+      }
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update schedule status',
+        code: 'UPDATE_STATUS_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
   // 🔄 UPDATE ASSIGNMENT STATUS
   async updateAssignmentStatus(req, res) {
     try {

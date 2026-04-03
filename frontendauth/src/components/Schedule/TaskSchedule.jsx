@@ -585,19 +585,18 @@ const TaskSchedule = ({ darkMode, onClose }) => {
       <div className="schedule-header">
         <div className="header-content">
           <h2>📅 Schedule Tasks</h2>
-          <p>Assign tasks with weekly restrictions and automatic email notifications</p>
           <div className="header-stats">
             <div className="stat">
               <span className="stat-number">{localStaff.length}</span>
-              <span className="stat-label">Available Staff</span>
+              <span className="stat-label">Staff</span>
             </div>
             <div className="stat">
               <span className="stat-number">{localTasks.length}</span>
-              <span className="stat-label">Available Tasks</span>
+              <span className="stat-label">Tasks</span>
             </div>
             <div className="stat">
               <span className="stat-number">{formData.selectedStaff.length}</span>
-              <span className="stat-label">Selected Staff</span>
+              <span className="stat-label">Selected</span>
             </div>
             <div className="stat">
               <span className="stat-number">Week {currentWeekNumber}</span>
@@ -612,7 +611,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
         <div className="restrictions-banner">
           <div className="restriction-item">
             <span className="restriction-icon">🛡️</span>
-            <span className="restriction-text">One task per week per staff</span>
+            <span className="restriction-text">1 task/week per staff</span>
           </div>
           <div className="restriction-item">
             <span className="restriction-icon">⏰</span>
@@ -620,7 +619,7 @@ const TaskSchedule = ({ darkMode, onClose }) => {
           </div>
           <div className="restriction-item">
             <span className="restriction-icon">📧</span>
-            <span className="restriction-text">Automatic email notifications</span>
+            <span className="restriction-text">Email notifications enabled</span>
           </div>
         </div>
       )}
@@ -633,12 +632,8 @@ const TaskSchedule = ({ darkMode, onClose }) => {
             <span className="restriction-text">Single day assignment</span>
           </div>
           <div className="restriction-item">
-            <span className="restriction-icon">👥</span>
-            <span className="restriction-text">Flexible staff selection</span>
-          </div>
-          <div className="restriction-item">
             <span className="restriction-icon">📧</span>
-            <span className="restriction-text">Automatic email notifications</span>
+            <span className="restriction-text">Email notifications enabled</span>
           </div>
         </div>
       )}

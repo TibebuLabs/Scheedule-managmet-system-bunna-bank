@@ -74,7 +74,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         case 'success': return <CheckCircle className="w-12 h-12 text-green-500" />;
         case 'error': return <AlertCircle className="w-12 h-12 text-red-500" />;
         case 'confirm': return <AlertCircle className="w-12 h-12 text-yellow-500" />;
-        default: return <Bell className="w-12 h-12 text-blue-500" />;
+        default: return <Bell className="w-12 h-12 text-[#3d1209]" />;
       }
     };
 
@@ -83,7 +83,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         case 'success': return 'bg-green-500 hover:bg-green-600';
         case 'error': return 'bg-red-500 hover:bg-red-600';
         case 'confirm': return 'bg-yellow-500 hover:bg-yellow-600';
-        default: return 'bg-blue-500 hover:bg-blue-600';
+        default: return 'bg-[#3d1209] hover:bg-[#5a1b0e]';
       }
     };
 
@@ -560,7 +560,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3d1209] mb-4"></div>
         <p className="text-gray-500 dark:text-gray-400">Loading schedules...</p>
       </div>
     );
@@ -575,7 +575,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
                 Task Schedules
               </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-2">
@@ -585,10 +585,10 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
             
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl">
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-4 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                    <BarChart3 className="w-6 h-6 text-[#3d1209] dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
@@ -597,10 +597,10 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-900/20 dark:to-orange-800/20 p-4 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                    <Calendar className="w-6 h-6 text-[#3d1209] dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.scheduled}</p>
@@ -650,7 +650,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => setViewMode(viewMode === 'table' ? 'calendar' : 'table')}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-xl hover:shadow-lg transition-all duration-300"
             >
               {viewMode === 'table' ? (
                 <>
@@ -687,7 +687,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 placeholder="Search schedules by task, ID, or staff..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="w-full pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none transition-all"
               />
               {searchQuery && (
                 <button 
@@ -706,7 +706,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
               <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none transition-all"
+                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none appearance-none transition-all"
               >
                 <option value="all">All Status</option>
                 <option value="scheduled">Scheduled</option>
@@ -722,7 +722,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
               <select 
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none transition-all"
+                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none appearance-none transition-all"
               >
                 <option value="all">All Types</option>
                 <option value="daily">Daily</option>
@@ -732,8 +732,8 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
             </div>
             
             {selectedSchedules.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl">
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-amber-50 dark:from-amber-900/20 p-4 rounded-xl">
+                <div className="flex items-center gap-2 text-[#3d1209] dark:text-amber-400 font-medium">
                   <CheckSquare className="w-5 h-5" />
                   {selectedSchedules.length} selected
                 </div>
@@ -742,7 +742,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                   <select 
                     value={bulkAction}
                     onChange={(e) => setBulkAction(e.target.value)}
-                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none"
                   >
                     <option value="">Bulk Actions</option>
                     <option value="completed">Mark as Completed</option>
@@ -754,7 +754,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                   <button
                     onClick={handleBulkAction}
                     disabled={!bulkAction}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Apply
                   </button>
@@ -777,7 +777,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                       type="checkbox"
                       checked={selectedSchedules.length === filteredSchedules.length && filteredSchedules.length > 0}
                       onChange={handleSelectAll}
-                      className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30"
                     />
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Schedule Details</th>
@@ -809,7 +809,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                 setFilterStatus('all');
                                 setFilterType('all');
                               }}
-                              className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700"
+                              className="inline-flex items-center gap-2 px-4 py-2 text-[#3d1209] hover:text-amber-700"
                             >
                               <RefreshCw className="w-4 h-4" />
                               Clear filters
@@ -822,13 +822,13 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 ) : (
                   filteredSchedules.map(schedule => (
                     <React.Fragment key={schedule.id}>
-                      <tr className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${editingId === schedule.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                      <tr className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${editingId === schedule.id ? 'bg-amber-50 dark:bg-amber-900/10' : ''}`}>
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedSchedules.includes(schedule.id)}
                             onChange={() => handleSelectSchedule(schedule.id)}
-                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30"
                           />
                         </td>
                         
@@ -846,7 +846,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                     name="taskTitle"
                                     value={editFormData.taskTitle}
                                     onChange={handleFormChange}
-                                    className="w-full px-4 py-2 text-lg font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 text-lg font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
                                     placeholder="Task Title"
                                     required
                                     autoFocus
@@ -855,7 +855,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                     name="taskDescription"
                                     value={editFormData.taskDescription}
                                     onChange={handleFormChange}
-                                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent resize-none"
                                     placeholder="Task Description"
                                     rows="2"
                                   />
@@ -863,7 +863,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                               ) : (
                                 <>
                                   <h3 
-                                    className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 cursor-pointer hover:text-[#3d1209] dark:hover:text-amber-400 transition-colors"
                                     onClick={() => toggleExpandSchedule(schedule.id)}
                                   >
                                     {schedule.taskTitle}
@@ -881,10 +881,10 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                             </div>
                             
                             <div className="flex flex-wrap gap-2">
-                              <span className="px-3 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                              <span className="px-3 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300 rounded-full">
                                 {schedule.scheduleType}
                               </span>
-                              <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-full">
+                              <span className="px-3 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full">
                                 {schedule.department}
                               </span>
                               <span className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full flex items-center gap-1">
@@ -911,7 +911,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                 </div>
                               </div>
                             )}
-                            <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400">
+                            <div className="flex items-center gap-2 text-sm text-[#3d1209] dark:text-amber-400">
                               <RefreshCw className="w-4 h-4" />
                               {schedule.recurrence}
                             </div>
@@ -949,7 +949,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                               name="priority"
                               value={editFormData.priority}
                               onChange={handleFormChange}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
                             >
                               <option value="low">Low</option>
                               <option value="medium">Medium</option>
@@ -960,7 +960,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium ${
                               getPriorityColor(schedule.priority) === 'red' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
                               getPriorityColor(schedule.priority) === 'orange' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' :
-                              getPriorityColor(schedule.priority) === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
+                              getPriorityColor(schedule.priority) === 'blue' ? 'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300' :
                               'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                             }`}>
                               <span className="text-lg">{getPriorityIcon(schedule.priority)}</span>
@@ -975,7 +975,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                               name="status"
                               value={editFormData.status}
                               onChange={handleFormChange}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
                             >
                               <option value="scheduled">Scheduled</option>
                               <option value="in progress">In Progress</option>
@@ -984,18 +984,18 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                             </select>
                           ) : (
                             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium ${
-                              getStatusColor(schedule.status) === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
+                              getStatusColor(schedule.status) === 'blue' ? 'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300' :
                               getStatusColor(schedule.status) === 'yellow' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
                               getStatusColor(schedule.status) === 'green' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
                               getStatusColor(schedule.status) === 'red' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                              'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                              'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300'
                             }`}>
                               <span className={`w-2 h-2 rounded-full ${
-                                getStatusColor(schedule.status) === 'blue' ? 'bg-blue-500' :
+                                getStatusColor(schedule.status) === 'blue' ? 'bg-[#3d1209]' :
                                 getStatusColor(schedule.status) === 'yellow' ? 'bg-yellow-500' :
                                 getStatusColor(schedule.status) === 'green' ? 'bg-green-500' :
                                 getStatusColor(schedule.status) === 'red' ? 'bg-red-500' :
-                                'bg-purple-500'
+                                'bg-amber-500'
                               }`}></span>
                               {schedule.status}
                             </div>
@@ -1026,14 +1026,14 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                 <>
                                   <button
                                     onClick={() => handleEditClick(schedule)}
-                                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                    className="p-2 bg-[#3d1209] text-white rounded-lg hover:bg-[#5a1b0e] transition-colors"
                                     title="Edit"
                                   >
                                     <Edit className="w-5 h-5" />
                                   </button>
                                   <button
                                     onClick={() => generatePDF(schedule)}
-                                    className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                                    className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
                                     title="Print PDF"
                                   >
                                     <Printer className="w-5 h-5" />
@@ -1192,7 +1192,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                                 <div className="flex flex-wrap gap-3 pt-4">
                                   <button
                                     onClick={() => generatePDF(schedule)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-md transition-all"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-lg hover:shadow-md transition-all"
                                   >
                                     <Download className="w-4 h-4" />
                                     Export PDF
@@ -1259,7 +1259,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 
                 return (
                   <div key={day} className="bg-white dark:bg-gray-900 min-h-[120px] p-3">
-                    <div className={`font-medium mb-2 ${day === 3 ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
+                    <div className={`font-medium mb-2 ${day === 3 ? 'text-[#3d1209] dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
                       {day}
                     </div>
                     <div className="space-y-2">
@@ -1269,7 +1269,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                           className={`p-2 rounded-lg text-xs cursor-pointer transition-all hover:scale-[1.02] ${
                             getPriorityColor(schedule.priority) === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500' :
                             getPriorityColor(schedule.priority) === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500' :
-                            getPriorityColor(schedule.priority) === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' :
+                            getPriorityColor(schedule.priority) === 'blue' ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-[#3d1209]' :
                             'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500'
                           }`}
                           onClick={() => toggleExpandSchedule(schedule.id)}
@@ -1320,7 +1320,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                   key={page}
                   className={`w-10 h-10 rounded-lg font-medium ${
                     page === 1
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                      ? 'bg-[#3d1209] text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >

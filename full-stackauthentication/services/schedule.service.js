@@ -1,6 +1,7 @@
 const Schedule = require('../models/Schedule.model');
 const Task = require('../models/Task.model');
 const Staff = require('../models/Staff.model');
+const emailService = require('./email.service');
 const { startOfWeek, endOfWeek } = require('date-fns');
 
 class ScheduleService {
@@ -185,33 +186,35 @@ class ScheduleService {
 
     for (const assignment of schedule.assignments) {
       try {
-        // Simulate email sending (replace with actual email service)
         console.log(`📧 Sending email to: ${assignment.email}`);
-        
-        // Update assignment status
-        assignment.notificationSent = true;
-        assignment.notificationSentAt = new Date();
-        assignment.emailStatus = 'sent';
-        
-        successfulCount++;
-        
-        notificationResults.push({
-          success: true,
-          staffName: assignment.staffName,
-          email: assignment.email,
-          sentAt: new Date()
-        });
-        
-        // Simulate slight delay
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+
+        const subject = `Task Assignment: ${schedule.taskTitle} — ${schedule.scheduleId}`;
+        const html = emailService.generateTaskAssignmentTemplate(schedule, assignment);
+        const result = await emailService.sendEmail(assignment.email, subject, html);
+
+        if (result.success) {
+          assignment.notificationSent = true;
+          assignment.notificationSentAt = new Date();
+          assignment.emailStatus = 'sent';
+          successfulCount++;
+          notificationResults.push({
+            success: true,
+            staffName: assignment.staffName,
+            email: assignment.email,
+            messageId: result.messageId,
+            sentAt: new Date()
+          });
+        } else {
+          throw new Error(result.error || 'Email delivery failed');
+        }
+
       } catch (emailError) {
-        console.error(`❌ Failed to send email to ${assignment.email}:`, emailError);
-        
+        console.error(`❌ Failed to send email to ${assignment.email}:`, emailError.message);
+
         assignment.notificationSent = false;
         assignment.emailStatus = 'failed';
         assignment.emailError = emailError.message;
-        
+
         notificationResults.push({
           success: false,
           staffName: assignment.staffName,
@@ -827,6 +830,68 @@ class ScheduleService {
       };
     } catch (error) {
       console.error('❌ Error getting staff weekly schedule:', error);
+      throw error;
+    }
+  }
+
+  // 🔄 UPDATE SCHEDULE STATUS
+  async updateScheduleStatus(id, status) {
+    try {
+      const schedule = await Schedule.findById(id);
+      if (!schedule) {
+        throw new Error('Schedule not found');
+      }
+
+      const validStatuses = ['scheduled', 'in-progress', 'in progress', 'completed', 'cancelled', 'overdue'];
+      if (!validStatuses.includes(status)) {
+        throw new Error(`Invalid status: ${status}`);
+      }
+
+      // Normalize "in progress" to "in-progress" for DB
+      schedule.status = status === 'in progress' ? 'in-progress' : status;
+      await schedule.save();
+
+      return {
+        success: true,
+        message: `Schedule status updated to ${status}`,
+        data: schedule
+      };
+    } catch (error) {
+      console.error('❌ Error updating schedule status:', error);
+      throw error;
+    }
+  }
+
+  // 🔄 UPDATE ASSIGNMENT STATUS
+  async updateAssignmentStatus(scheduleId, staffId, updateData) {
+    try {
+      const schedule = await Schedule.findById(scheduleId);
+      if (!schedule) {
+        throw new Error('Schedule not found');
+      }
+
+      const assignment = schedule.assignments.find(
+        a => a.staffId.toString() === staffId.toString()
+      );
+
+      if (!assignment) {
+        throw new Error('Assignment not found for this staff member');
+      }
+
+      if (updateData.status) assignment.status = updateData.status;
+      if (updateData.notes) assignment.notes = updateData.notes;
+      if (updateData.hoursWorked !== undefined) assignment.hoursWorked = updateData.hoursWorked;
+      if (updateData.status === 'completed') assignment.completedAt = new Date();
+
+      await schedule.save();
+
+      return {
+        success: true,
+        message: 'Assignment status updated successfully',
+        data: { scheduleId, staffId, assignment }
+      };
+    } catch (error) {
+      console.error('❌ Error updating assignment status:', error);
       throw error;
     }
   }

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   FileText, BookOpen, AlertCircle, CheckCircle, 
   XCircle, Loader2, ArrowLeft, Plus, Check,
-  X, Info
+  X, Info, Star, Award, Clock
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -18,6 +18,17 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdTask, setCreatedTask] = useState(null);
   const [touched, setTouched] = useState({});
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Track mouse movement for interactive effects
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Handler Functions
   const handleChange = (e) => {
@@ -119,7 +130,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
 
   // Helper Components
   const RequiredStar = () => (
-    <span className="text-rose-500 ml-1" title="Required field">*</span>
+    <span className="text-[#3d1209] ml-1" title="Required field">*</span>
   );
 
   const getFieldStatus = (fieldName, hasError) => {
@@ -129,10 +140,10 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
 
   const FieldStatusIndicator = ({ status }) => {
     if (status === 'valid') {
-      return <CheckCircle className="w-4 h-4 text-emerald-500 animate-pulse" />;
+      return <CheckCircle className="w-4 h-4 text-emerald-500" />;
     }
     if (status === 'invalid') {
-      return <XCircle className="w-4 h-4 text-rose-500 animate-pulse" />;
+      return <XCircle className="w-4 h-4 text-[#3d1209]" />;
     }
     return <Info className="w-4 h-4 text-amber-500 opacity-50" />;
   };
@@ -143,24 +154,62 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
   return (
     <>
       <div className="relative">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-indigo-50/20 to-purple-50/20 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10 rounded-3xl -z-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-500/10 to-transparent rounded-full blur-3xl -z-10" />
+        {/* Interactive Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div 
+            className="absolute w-[400px] h-[400px] -top-48 -left-48 bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 rounded-full blur-3xl animate-pulse"
+            style={{
+              transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+            }}
+          />
+          <div 
+            className="absolute w-[300px] h-[300px] -bottom-48 -right-48 bg-gradient-to-r from-amber-500/5 to-[#3d1209]/5 rounded-full blur-3xl animate-pulse delay-1000"
+            style={{
+              transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)`
+            }}
+          />
+          
+          {/* Floating Particles */}
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-[#3d1209]/10 rounded-full"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `float ${20 + Math.random() * 20}s infinite linear`,
+                animationDelay: `${Math.random() * 5}s`
+              }}
+            />
+          ))}
+        </div>
 
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl border border-gray-200/60 dark:border-gray-700/60 shadow-2xl shadow-blue-500/10 dark:shadow-gray-900/40 overflow-hidden">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl overflow-hidden relative z-10">
+          {/* Decorative Header Bar */}
+          <div className="h-2 bg-gradient-to-r from-[#3d1209] via-amber-600 to-[#3d1209]"></div>
+
           {/* Header */}
-          <div className="relative p-8 border-b border-gray-200/60 dark:border-gray-700/60 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+          <div className="relative p-8 border-b border-gray-200/60 bg-gradient-to-r from-[#3d1209]/5 via-amber-500/5 to-[#3d1209]/5">
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 opacity-5"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233d1209' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                backgroundSize: '30px 30px'
+              }}
+            />
+
+            <div className="relative flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-[#3d1209] to-amber-600 rounded-2xl shadow-lg">
                 <FileText className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-indigo-600 dark:from-white dark:via-blue-300 dark:to-indigo-400 bg-clip-text text-transparent">
-                  Create New Task
+                <h2 className="text-2xl md:text-3xl font-bold">
+                  <span className="bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
+                    Create New Task
+                  </span>
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  Fill in all required fields marked with <span className="text-rose-500 font-bold">*</span>
+                <p className="text-gray-600 mt-2">
+                  Fill in all required fields marked with <span className="text-[#3d1209] font-bold">*</span>
                 </p>
               </div>
             </div>
@@ -168,7 +217,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
             <div className="absolute top-4 right-4 flex gap-2">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse delay-75" />
-              <div className="w-2 h-2 bg-rose-400 rounded-full animate-pulse delay-150" />
+              <div className="w-2 h-2 bg-[#3d1209] rounded-full animate-pulse delay-150" />
             </div>
           </div>
 
@@ -177,18 +226,18 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
               {/* Task Details Section */}
               <div className="animate-slide-in-up">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl">
-                    <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2 bg-gradient-to-br from-[#3d1209]/10 to-amber-500/10 rounded-xl">
+                    <FileText className="w-5 h-5 text-[#3d1209]" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Task Details</h3>
-                  <span className="ml-2 px-2 py-1 bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-full">
+                  <h3 className="text-lg font-bold text-gray-900">Task Details</h3>
+                  <span className="ml-2 px-2 py-1 bg-[#3d1209]/10 text-[#3d1209] text-xs font-semibold rounded-full">
                     All Fields Required
                   </span>
                 </div>
 
                 {/* Task Title Field */}
                 <div className="space-y-2 mb-6">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <FileText className="w-4 h-4 text-gray-500" />
                     Task Title
                     <RequiredStar />
@@ -206,26 +255,26 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                       placeholder="Enter task title (min 3 characters)"
                       required
                       disabled={loading}
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                         errors.title
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : formData.title.length >= 3
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500/30 group-hover:border-blue-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
                       errors.title
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : formData.title.length >= 3
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-blue-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <FileText className="w-5 h-5" />
                     </div>
                   </div>
                   {errors.title && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse flex items-center gap-1">
+                    <p className="text-xs text-[#3d1209] flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
                       {errors.title}
                     </p>
@@ -234,7 +283,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
 
                 {/* Task Description Field */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <BookOpen className="w-4 h-4 text-gray-500" />
                     Task Description
                     <RequiredStar />
@@ -252,34 +301,34 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                       required
                       rows="5"
                       disabled={loading}
-                      className={`w-full px-4 py-3 pl-11 bg-white dark:bg-gray-700/60 border rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed resize-none ${
+                      className={`w-full px-4 py-3 pl-11 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed resize-none ${
                         errors.description
-                          ? 'border-rose-500 focus:ring-rose-500/30'
+                          ? 'border-[#3d1209] focus:ring-[#3d1209]/30'
                           : formData.description.length >= 10
                           ? 'border-emerald-500 focus:ring-emerald-500/30'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500/30 group-hover:border-blue-400'
+                          : 'border-gray-300 focus:ring-[#3d1209]/30 group-hover:border-amber-400'
                       }`}
                     />
                     <div className={`absolute left-3 top-3 transition-colors ${
                       errors.description
-                        ? 'text-rose-500'
+                        ? 'text-[#3d1209]'
                         : formData.description.length >= 10
                         ? 'text-emerald-500'
-                        : 'text-gray-400 group-focus-within:text-blue-500'
+                        : 'text-gray-400 group-focus-within:text-[#3d1209]'
                     }`}>
                       <BookOpen className="w-5 h-5" />
                     </div>
-                    <div className="absolute right-3 bottom-3 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="absolute right-3 bottom-3 text-xs text-gray-500">
                       {formData.description.length}/1000
                     </div>
                   </div>
                   {errors.description && (
-                    <p className="text-xs text-rose-600 dark:text-rose-400 animate-pulse flex items-center gap-1">
+                    <p className="text-xs text-[#3d1209] flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
                       {errors.description}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-gray-500">
                     Provide a clear and detailed description of the task requirements
                   </p>
                 </div>
@@ -287,13 +336,13 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
             </div>
 
             {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-gray-200/60 dark:border-gray-700/60">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-gray-200/60">
+              <div className="text-sm text-gray-600">
                 <p className="flex items-center gap-2">
-                  <span className="text-rose-500 font-bold">*</span>
+                  <span className="text-[#3d1209] font-bold">*</span>
                   <span>Indicates required field</span>
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Please fill all required fields before submitting
                 </p>
               </div>
@@ -303,7 +352,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                   type="button" 
                   onClick={onCancel}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-6 py-3 w-full sm:w-auto bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Cancel
@@ -312,8 +361,9 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="group relative flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                  className="group relative flex items-center justify-center gap-3 px-8 py-4 w-full sm:w-auto bg-gradient-to-r from-[#3d1209] to-amber-600 hover:from-[#4d170c] hover:to-amber-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none overflow-hidden"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -323,8 +373,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                     <>
                       <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       <span>Create New Task</span>
-                      <div className="absolute inset-0 rounded-xl border-2 border-white/30 group-hover:border-white/50 transition-colors" />
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute -inset-1 bg-gradient-to-r from-[#3d1209]/20 via-amber-500/20 to-[#3d1209]/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </>
                   )}
                 </button>
@@ -337,48 +386,51 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
       {/* Success Modal */}
       {showSuccessModal && createdTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl shadow-emerald-500/20 max-w-lg w-full overflow-hidden animate-slide-up">
+          <div className="relative bg-gradient-to-br from-white to-[#fdf8f5] rounded-3xl shadow-2xl shadow-[#3d1209]/20 max-w-lg w-full overflow-hidden animate-slide-up border border-[#e6d7cf]">
+            {/* Decorative Header Bar */}
+            <div className="h-2 bg-gradient-to-r from-[#3d1209] via-amber-600 to-[#3d1209]"></div>
+            
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-full blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-2xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-amber-500/10 to-transparent rounded-full blur-2xl" />
             
             <div className="relative p-8">
               <div className="text-center mb-6">
-                <div className="inline-flex p-4 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full shadow-lg animate-bounce mb-4">
+                <div className="inline-flex p-4 bg-gradient-to-br from-[#3d1209] to-amber-600 rounded-full shadow-lg animate-bounce mb-4">
                   <Check className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
                   Task Created Successfully! 🎉
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                <p className="text-gray-600 mt-2">
                   Your new task has been added to the system
                 </p>
               </div>
               
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-6 mb-6">
+              <div className="bg-gradient-to-br from-[#3d1209]/5 to-amber-500/5 border border-[#e6d7cf] rounded-2xl p-6 mb-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Task ID:</span>
-                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                    <span className="text-sm font-semibold text-gray-700">Task ID:</span>
+                    <span className="font-mono font-bold text-[#3d1209]">
                       {createdTask.taskId}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Title:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white text-right">
+                    <span className="text-sm font-semibold text-gray-700">Title:</span>
+                    <span className="font-semibold text-gray-900 text-right">
                       {createdTask.title}
                     </span>
                   </div>
                   {createdTask.description && (
                     <div>
-                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-2">Description:</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                      <span className="text-sm font-semibold text-gray-700 block mb-2">Description:</span>
+                      <p className="text-sm text-gray-600 bg-white/50 p-3 rounded-lg border border-[#e6d7cf]">
                         {createdTask.description}
                       </p>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Created:</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-gray-700">Created:</span>
+                    <span className="text-sm text-gray-600">
                       {new Date(createdTask.createdAt).toLocaleDateString('en-US', {
                         weekday: 'short',
                         year: 'numeric',
@@ -392,23 +444,23 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                 </div>
               </div>
               
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 mb-6 text-center">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">✨ Great job!</span> The task has been saved to the database.
+              <div className="bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 border border-[#e6d7cf] rounded-2xl p-4 mb-6 text-center">
+                <p className="text-sm text-gray-700">
+                  <span className="font-bold text-[#3d1209]">✨ Great job!</span> The task has been saved to the database.
                 </p>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button 
                   onClick={handleContinueAdding}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-all duration-200 hover:scale-105"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 hover:scale-105"
                 >
                   <Plus className="w-4 h-4" />
                   Add Another
                 </button>
                 <button 
                   onClick={handleCloseModal}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3d1209] to-amber-600 hover:from-[#4d170c] hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 >
                   <span className="text-lg">👁️</span>
                   View All Tasks
@@ -421,6 +473,12 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
 
       {/* Animations */}
       <style jsx global>{`
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
+          100% { transform: translateY(0px) rotate(360deg); }
+        }
+        
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -446,6 +504,10 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
         
         .animate-slide-up {
           animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .animation-delay-1000 {
+          animation-delay: 1000ms;
         }
       `}</style>
     </>

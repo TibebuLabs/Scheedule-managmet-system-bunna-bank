@@ -13,8 +13,8 @@
   justify-content: space-between;
   align-items: flex-start;
   background: linear-gradient(135deg, 
-    rgba(79, 70, 229, 0.05) 0%, 
-    rgba(79, 70, 229, 0.02) 100%);
+    rgba(61, 18, 9, 0.05) 0%, 
+    rgba(61, 18, 9, 0.02) 100%);
 }
 
 .header-content h2 {
@@ -44,12 +44,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 20px rgba(61, 18, 9, 0.3);
 }
 
 .add-staff-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 8px 30px rgba(61, 18, 9, 0.4);
 }
 
 .plus-icon {
@@ -403,7 +403,7 @@
 .page-number.active {
   background-color: var(--primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(61, 18, 9, 0.3);
 }
 
 /* Responsive styles */

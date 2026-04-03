@@ -24,17 +24,6 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
   });
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [staffDetails, setStaffDetails] = useState(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  // Track mouse movement for interactive effects
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   const fetchStaffMembers = async () => {
     try {
@@ -273,36 +262,6 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
 
   return (
     <div className="staff-management" style={{ backgroundColor: '#fdf8f5' }}>
-      {/* Interactive Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div 
-          className="absolute w-[600px] h-[600px] -top-48 -left-48 bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 rounded-full blur-3xl animate-pulse"
-          style={{
-            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
-          }}
-        />
-        <div 
-          className="absolute w-[500px] h-[500px] -bottom-48 -right-48 bg-gradient-to-r from-amber-500/5 to-[#3d1209]/5 rounded-full blur-3xl animate-pulse delay-1000"
-          style={{
-            transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)`
-          }}
-        />
-        
-        {/* Floating Particles */}
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-[#3d1209]/10 rounded-full"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `float ${20 + Math.random() * 20}s infinite linear`,
-              animationDelay: `${Math.random() * 5}s`
-            }}
-          />
-        ))}
-      </div>
-
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal-overlay">
@@ -725,11 +684,6 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       </div>
 
       <style jsx>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-          100% { transform: translateY(0px) rotate(360deg); }
-        }
       `}</style>
     </div>
   );

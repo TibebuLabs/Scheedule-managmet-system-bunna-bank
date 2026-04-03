@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
 import Header from '../components/Header/Header';
-import WelcomeBanner from '../components/Dashboard/WelcomeBanner';
-import StatsCards from '../components/Dashboard/StatsCards';
-import QuickActions from '../components/Dashboard/QuickActions';
 import StaffTable from '../components/Staff/StaffTable';
 import AddStaffForm from '../components/Staff/AddStaffForm';
 import TaskCard from '../components/Tasks/TaskCard';
@@ -18,8 +15,7 @@ import PrivacyPage from '../components/Header/PrivacyPage';
 import { 
   FaBell, FaChartLine, FaUsers, FaTasks, FaCalendarAlt, 
   FaArrowRight, FaCheckCircle, FaClock, FaExclamationTriangle,
-  FaUserPlus, FaClipboardList, FaFileAlt, FaCog, FaShieldAlt,
-  FaStar, FaRegClock, FaRegCheckCircle, FaUserCheck
+  FaUserPlus, FaClipboardList, FaFileAlt, FaRegClock
 } from 'react-icons/fa';
 
 const Dashboard = ({ darkMode, setDarkMode }) => {
@@ -31,8 +27,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
   const [activeSubMenu, setActiveSubMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-  const [showWelcomeToast, setShowWelcomeToast] = useState(true);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   // User state — populated from AuthContext
   const [currentUser, setCurrentUser] = useState(() => {
@@ -77,22 +71,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
       });
     }
   }, [authUser]);
-
-  // Track mouse movement for interactive effects
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  // Auto-hide welcome toast
-  useEffect(() => {
-    const timer = setTimeout(() => setShowWelcomeToast(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
   
   // Sample Data
   const [staffMembers, setStaffMembers] = useState([
@@ -253,7 +231,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
   }, []);
 
   const isMobile = screenWidth < 768;
-  const isTablet = screenWidth >= 768 && screenWidth < 1024;
 
   const handleLogout = () => {
     logout();
@@ -345,21 +322,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
       case 'dashboard':
         return (
           <div className="space-y-5 md:space-y-6">
-            {/* Welcome Toast */}
-            {showWelcomeToast && (
-              <div className="fixed top-20 right-4 z-50 animate-slide-in-right">
-                <div className="bg-white rounded-xl shadow-2xl border-l-4 border-[#3d1209] p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#3d1209]/10 rounded-full flex items-center justify-center">
-                    <FaUserCheck className="text-[#3d1209]" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800">Welcome back, {currentUser.fullName}!</p>
-                    <p className="text-sm text-gray-600">You have {unreadNotifications} new notifications</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Welcome Banner */}
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#3d1209] to-[#5a1b0e] p-6 md:p-8">
               <div className="absolute inset-0 opacity-10"
@@ -387,7 +349,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             {/* Stats Cards with custom styling */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {/* Staff Stats */}
-              <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-12 h-12 bg-[#3d1209]/10 rounded-lg flex items-center justify-center">
                     <FaUsers className="text-[#3d1209] text-xl" />
@@ -396,8 +358,8 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
                     +{staffMembers.length - 5} new
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">{staffMembers.length}</h3>
-                <p className="text-sm text-gray-500">Total Staff Members</p>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">{staffMembers.length}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Staff Members</p>
                 <div className="mt-3 flex items-center gap-2">
                   <div className="flex-1 h-1.5 bg-gray-200 rounded-full">
                     <div className="h-full bg-[#3d1209] rounded-full" style={{ width: `${(activeStaff / staffMembers.length) * 100}%` }} />
@@ -407,7 +369,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
               </div>
 
               {/* Tasks Stats */}
-              <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
                     <FaTasks className="text-amber-600 text-xl" />
@@ -416,8 +378,8 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
                     {highPriorityTasks} high
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">{tasks.length}</h3>
-                <p className="text-sm text-gray-500">Total Tasks</p>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">{tasks.length}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Tasks</p>
                 <div className="mt-3 flex items-center gap-2">
                   <FaCheckCircle className="text-green-500 text-xs" />
                   <span className="text-xs text-gray-600">{completedTasks} Completed</span>
@@ -427,7 +389,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
               </div>
 
               {/* Schedule Stats */}
-              <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                     <FaCalendarAlt className="text-emerald-600 text-xl" />
@@ -436,8 +398,8 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
                     Today
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">8</h3>
-                <p className="text-sm text-gray-500">Scheduled Events</p>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">8</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Scheduled Events</p>
                 <div className="mt-3 flex items-center gap-2">
                   <FaRegClock className="text-emerald-500 text-xs" />
                   <span className="text-xs text-gray-600">Next: Team Meeting at 2PM</span>
@@ -445,17 +407,17 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
               </div>
 
               {/* Pending Approvals */}
-              <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                    <FaClipboardList className="text-purple-600 text-xl" />
+                  <div className="w-12 h-12 bg-[#3d1209]/10 rounded-lg flex items-center justify-center">
+                    <FaClipboardList className="text-[#3d1209] text-xl" />
                   </div>
-                  <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  <span className="text-xs font-semibold text-[#3d1209] bg-[#3d1209]/10 px-2 py-1 rounded-full">
                     Urgent
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">4</h3>
-                <p className="text-sm text-gray-500">Pending Approvals</p>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">4</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending Approvals</p>
                 <div className="mt-3 flex items-center gap-2">
                   <FaExclamationTriangle className="text-orange-500 text-xs" />
                   <span className="text-xs text-gray-600">2 require attention</span>
@@ -467,10 +429,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
                 onClick={() => { setActiveMenu('staff'); setActiveSubMenu('add-staff'); }}
-                className="group relative overflow-hidden bg-gradient-to-r from-[#3d1209] to-[#5a1b0e] text-white rounded-xl p-5 transition-all duration-500 hover:shadow-2xl hover:shadow-[#3d1209]/30 hover:-translate-y-1"
+                className="group bg-gradient-to-r from-[#3d1209] to-[#5a1b0e] text-white rounded-xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-[#3d1209]/30 hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <div className="relative flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <FaUserPlus className="text-white text-lg" />
                   </div>
@@ -484,10 +445,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
               <button
                 onClick={() => { setActiveMenu('task'); setActiveSubMenu('add-task'); }}
-                className="group relative overflow-hidden bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl p-5 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-600/30 hover:-translate-y-1"
+                className="group bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-600/30 hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <div className="relative flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <FaTasks className="text-white text-lg" />
                   </div>
@@ -501,10 +461,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
               <button
                 onClick={() => { setActiveMenu('TaskSchedule'); setActiveSubMenu('add-schedule'); }}
-                className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl p-5 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-600/30 hover:-translate-y-1"
+                className="group bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-600/30 hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <div className="relative flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <FaCalendarAlt className="text-white text-lg" />
                   </div>
@@ -518,10 +477,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
               <button
                 onClick={() => setActiveMenu('reports')}
-                className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl p-5 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-600/30 hover:-translate-y-1"
+                className="group bg-gradient-to-r from-[#3d1209] to-[#5a1b0e] text-white rounded-xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-[#3d1209]/30 hover:-translate-y-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <div className="relative flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <FaFileAlt className="text-white text-lg" />
                   </div>
@@ -537,9 +495,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             {/* Recent Tasks and Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               {/* Tasks List */}
-              <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-5 border border-gray-100">
+              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Recent Tasks</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Recent Tasks</h3>
                   <button 
                     onClick={() => setActiveMenu('task')}
                     className="text-sm text-[#3d1209] font-medium hover:underline flex items-center gap-1"
@@ -573,9 +531,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
               </div>
 
               {/* Recent Activity */}
-              <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Recent Activity</h3>
                   <FaBell className="text-[#3d1209]" />
                 </div>
                 <div className="space-y-4">
@@ -602,9 +560,9 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
             </div>
 
             {/* Staff Performance Section */}
-            <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Staff Performance</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Staff Performance</h3>
                 <button className="text-sm text-[#3d1209] font-medium hover:underline">View Details</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -677,11 +635,11 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
           </div>
         ) : (
           <div className="px-2 sm:px-0">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
               <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">Task Management</h2>
-                  <p className="text-sm text-gray-500 mt-1">Track and manage all tasks</p>
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Task Management</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track and manage all tasks</p>
                 </div>
                 <button
                   onClick={() => setActiveSubMenu('add-task')}
@@ -691,11 +649,10 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
                   <FaTasks /> Add New Task
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tasks.map(task => (
-                  <TaskCard key={task.id} task={task} darkMode={effectiveDarkMode} />
-                ))}
-              </div>
+              <TaskCard
+                onAddTask={() => setActiveSubMenu('add-task')}
+                darkMode={effectiveDarkMode}
+              />
             </div>
           </div>
         );
@@ -816,17 +773,14 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
       default:
         return (
           <div className="space-y-5 md:space-y-6">
-            <WelcomeBanner 
-              darkMode={effectiveDarkMode} 
-              userName={currentUser.fullName}
-            />
-            <StatsCards 
-              staffCount={staffMembers.length}
-              activeTasks={tasks.filter(t => t.status !== 'completed').length}
-              scheduleCount={8}
-              pendingApprovals={4}
-              darkMode={effectiveDarkMode}
-            />
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#3d1209] to-[#5a1b0e] p-6 md:p-8">
+              <div className="relative z-10">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  Welcome, {currentUser.fullName}!
+                </h1>
+                <p className="text-amber-100/80">Select a section from the sidebar to get started.</p>
+              </div>
+            </div>
           </div>
         );
     }
@@ -834,36 +788,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
   return (
     <div className={`min-h-screen ${effectiveDarkMode ? 'dark bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-[#fdf8f5] via-[#faf1eb] to-[#f5e6de]'}`}>
-      {/* Interactive Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div 
-          className="absolute w-[600px] h-[600px] -top-48 -left-48 bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 rounded-full blur-3xl animate-pulse"
-          style={{
-            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
-          }}
-        />
-        <div 
-          className="absolute w-[500px] h-[500px] -bottom-48 -right-48 bg-gradient-to-r from-amber-500/5 to-[#3d1209]/5 rounded-full blur-3xl animate-pulse delay-1000"
-          style={{
-            transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px)`
-          }}
-        />
-        
-        {/* Floating Particles */}
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-[#3d1209]/10 rounded-full"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `float ${20 + Math.random() * 20}s infinite linear`,
-              animationDelay: `${Math.random() * 5}s`
-            }}
-          />
-        ))}
-      </div>
-
       <Sidebar 
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -907,7 +831,7 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
       {/* Mobile bottom navigation */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 flex justify-around items-center z-50 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-2 px-4 flex justify-around items-center z-50 shadow-lg">
           <button
             onClick={() => setActiveMenu('dashboard')}
             className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
@@ -951,12 +875,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
       {isMobile && <div className="h-16"></div>}
 
       <style jsx>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-          100% { transform: translateY(0px) rotate(360deg); }
-        }
-        
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }

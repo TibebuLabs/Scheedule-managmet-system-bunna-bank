@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -10,6 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
   return (
     <AuthProvider>
       <div className="App">
@@ -35,7 +37,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Dashboard />
+              <Dashboard darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           } />
           <Route path="/" element={<Navigate to="/login" />} />

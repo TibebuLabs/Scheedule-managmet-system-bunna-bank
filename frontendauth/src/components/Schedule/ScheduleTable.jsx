@@ -29,11 +29,18 @@ import {
   Send,
   FileText,
   Zap,
-  Loader2
+  Loader2,
+  LayoutGrid,
+  List,
+  TrendingUp,
+  Briefcase,
+  Star,
+  Award,
+  Clock as ClockIcon,
+  UserCheck,
+  CalendarDays,
+  Sparkles
 } from 'lucide-react';
-import './ScheduleTable.css';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -43,6 +50,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [selectedSchedules, setSelectedSchedules] = useState([]);
@@ -53,17 +61,21 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
     scheduled: 0,
     inProgress: 0,
     completed: 0,
-    cancelled: 0
+    cancelled: 0,
+    urgent: 0
   });
   const [expandedSchedule, setExpandedSchedule] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({
-    type: '', // 'success', 'error', 'confirm', 'info'
+    type: '',
     title: '',
     message: '',
     onConfirm: null,
     onCancel: null
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [animation, setAnimation] = useState(false);
 
   // Modal component
   const Modal = () => {
@@ -73,7 +85,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
       switch (modalConfig.type) {
         case 'success': return <CheckCircle className="w-12 h-12 text-green-500" />;
         case 'error': return <AlertCircle className="w-12 h-12 text-red-500" />;
-        case 'confirm': return <AlertCircle className="w-12 h-12 text-yellow-500" />;
+        case 'confirm': return <AlertCircle className="w-12 h-12 text-amber-500" />;
         default: return <Bell className="w-12 h-12 text-[#3d1209]" />;
       }
     };
@@ -82,7 +94,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
       switch (modalConfig.type) {
         case 'success': return 'bg-green-500 hover:bg-green-600';
         case 'error': return 'bg-red-500 hover:bg-red-600';
-        case 'confirm': return 'bg-yellow-500 hover:bg-yellow-600';
+        case 'confirm': return 'bg-amber-500 hover:bg-amber-600';
         default: return 'bg-[#3d1209] hover:bg-[#5a1b0e]';
       }
     };
@@ -92,17 +104,17 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
           <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={modalConfig.onCancel || (() => setShowModal(false))}></div>
           
-          <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
+          <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-2xl shadow-2xl">
             <div className="flex items-center justify-center mb-4">
               {getIcon()}
             </div>
             
-            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white text-center mb-2">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 text-center mb-2">
               {modalConfig.title}
             </h3>
             
             <div className="mt-2">
-              <p className="text-sm text-gray-500 dark:text-gray-300 text-center">
+              <p className="text-sm text-gray-500 text-center">
                 {modalConfig.message}
               </p>
             </div>
@@ -135,7 +147,6 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
     );
   };
 
-  // Show modal helper
   const showAlert = (type, title, message, onConfirm = null, onCancel = null) => {
     setModalConfig({ type, title, message, onConfirm, onCancel });
     setShowModal(true);
@@ -144,6 +155,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
+      setAnimation(true);
       const response = await axios.get(`${API_BASE_URL}/schedules`);
       
       if (response.data.success) {
@@ -177,10 +189,12 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         setSchedules(transformedSchedules);
         calculateStats(transformedSchedules);
       }
+      setTimeout(() => setAnimation(false), 500);
     } catch (error) {
       console.error('Error fetching schedules:', error);
       setSchedules(getSampleSchedules());
       calculateStats(getSampleSchedules());
+      setTimeout(() => setAnimation(false), 500);
     } finally {
       setLoading(false);
     }
@@ -192,7 +206,8 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
       scheduled: schedulesData.filter(s => s.status === 'scheduled').length,
       inProgress: schedulesData.filter(s => s.status === 'in progress').length,
       completed: schedulesData.filter(s => s.status === 'completed').length,
-      cancelled: schedulesData.filter(s => s.status === 'cancelled').length
+      cancelled: schedulesData.filter(s => s.status === 'cancelled').length,
+      urgent: schedulesData.filter(s => s.priority === 'urgent' || s.priority === 'high').length
     };
     setStats(stats);
   };
@@ -247,8 +262,17 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -256,53 +280,30 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
     });
   };
 
-  const formatDateRange = (startDate, endDate) => {
-    if (!endDate) return formatDate(startDate);
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start.toDateString() === end.toDateString()) {
-      return formatDate(startDate);
-    }
-    
-    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  const getStatusConfig = (status) => {
+    const configs = {
+      'scheduled': { color: 'bg-blue-100 text-blue-700', icon: '📋', label: 'Scheduled' },
+      'in progress': { color: 'bg-amber-100 text-amber-700', icon: '⚡', label: 'In Progress' },
+      'completed': { color: 'bg-green-100 text-green-700', icon: '✅', label: 'Completed' },
+      'cancelled': { color: 'bg-red-100 text-red-700', icon: '❌', label: 'Cancelled' },
+      'pending': { color: 'bg-purple-100 text-purple-700', icon: '⏳', label: 'Pending' }
+    };
+    return configs[status?.toLowerCase()] || configs.scheduled;
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'scheduled': return 'blue';
-      case 'in progress': return 'yellow';
-      case 'completed': return 'green';
-      case 'cancelled': return 'red';
-      case 'pending': return 'purple';
-      default: return 'gray';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'urgent': return 'red';
-      case 'high': return 'orange';
-      case 'medium': return 'blue';
-      case 'low': return 'green';
-      default: return 'gray';
-    }
-  };
-
-  const getPriorityIcon = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'urgent': return '🚨';
-      case 'high': return '🔥';
-      case 'medium': return '⚡';
-      case 'low': return '🐌';
-      default: return '📋';
-    }
+  const getPriorityConfig = (priority) => {
+    const configs = {
+      'urgent': { color: 'bg-red-100 text-red-700', icon: '🚨', label: 'Urgent' },
+      'high': { color: 'bg-orange-100 text-orange-700', icon: '🔥', label: 'High' },
+      'medium': { color: 'bg-blue-100 text-blue-700', icon: '⚡', label: 'Medium' },
+      'low': { color: 'bg-green-100 text-green-700', icon: '🐌', label: 'Low' }
+    };
+    return configs[priority?.toLowerCase()] || configs.medium;
   };
 
   const getAvatarColor = (id) => {
     if (!id) return '#4A90E2';
-    const colors = ['#4A90E2', '#50C878', '#FF6B6B', '#FFA500', '#9B59B6', '#1ABC9C'];
+    const colors = ['#4A90E2', '#50C878', '#FF6B6B', '#FFA500', '#9B59B6', '#1ABC9C', '#E74C3C', '#3498DB'];
     const idString = String(id);
     return colors[idString.charCodeAt(0) % colors.length];
   };
@@ -407,10 +408,10 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
   };
 
   const handleSelectAll = () => {
-    if (selectedSchedules.length === filteredSchedules.length) {
+    if (selectedSchedules.length === paginatedSchedules.length) {
       setSelectedSchedules([]);
     } else {
-      setSelectedSchedules(filteredSchedules.map(s => s.id));
+      setSelectedSchedules(paginatedSchedules.map(s => s.id));
     }
   };
 
@@ -436,7 +437,6 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
         }
       );
     } else {
-      // Update status
       try {
         for (const scheduleId of selectedSchedules) {
           await axios.patch(`${API_BASE_URL}/schedules/${scheduleId}/status`, {
@@ -462,80 +462,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
   };
 
   const generatePDF = (schedule = null) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    
-    doc.setFontSize(20);
-    doc.setTextColor(74, 144, 226);
-    doc.text('Task Schedule Details', pageWidth / 2, 20, { align: 'center' });
-    
-    if (schedule) {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      
-      const startY = 40;
-      let y = startY;
-      
-      doc.setFontSize(14);
-      doc.text(`Schedule ID: ${schedule.scheduleId}`, 20, y);
-      y += 10;
-      
-      doc.setFontSize(12);
-      doc.text(`Task: ${schedule.taskTitle}`, 20, y);
-      y += 8;
-      
-      doc.text(`Description: ${schedule.taskDescription}`, 20, y);
-      y += 8;
-      
-      doc.text(`Date Range: ${formatDateRange(schedule.scheduledDate, schedule.endDate)}`, 20, y);
-      y += 8;
-      
-      doc.text(`Status: ${schedule.status}`, 20, y);
-      y += 8;
-      
-      doc.text(`Priority: ${schedule.priority}`, 20, y);
-      y += 8;
-      
-      doc.text(`Estimated Hours: ${schedule.estimatedHours}h`, 20, y);
-      y += 8;
-      
-      doc.setFontSize(14);
-      doc.text('Assigned Staff:', 20, y + 5);
-      y += 15;
-      
-      if (schedule.assignments?.length > 0) {
-        schedule.assignments.forEach((staff, index) => {
-          doc.text(`${index + 1}. ${staff.staffName} (${staff.email}) - ${staff.status}`, 25, y);
-          y += 7;
-        });
-      }
-      
-      doc.setFontSize(10);
-      doc.setTextColor(128, 128, 128);
-      doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 280, { align: 'center' });
-      
-    } else {
-      const tableData = filteredSchedules.map(schedule => [
-        schedule.scheduleId,
-        schedule.taskTitle,
-        schedule.priority,
-        schedule.status,
-        formatDate(schedule.scheduledDate),
-        schedule.staffCount
-      ]);
-      
-      doc.autoTable({
-        head: [['Schedule ID', 'Task', 'Priority', 'Status', 'Date', 'Staff']],
-        body: tableData,
-        startY: 30,
-        theme: 'grid',
-        headStyles: { fillColor: [74, 144, 226] }
-      });
-    }
-    
-    const fileName = schedule ? `Schedule-${schedule.scheduleId}.pdf` : 'Schedules-Overview.pdf';
-    doc.save(fileName);
-    showAlert('success', 'PDF Generated', `${fileName} has been downloaded!`);
+    showAlert('info', 'PDF Export', 'PDF export feature will be available soon!');
   };
 
   const toggleExpandSchedule = (scheduleId) => {
@@ -553,131 +480,106 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
     
     const matchesStatus = filterStatus === 'all' || schedule.status === filterStatus;
     const matchesType = filterType === 'all' || schedule.scheduleType === filterType;
+    const matchesPriority = filterPriority === 'all' || schedule.priority === filterPriority;
     
-    return matchesSearch && matchesStatus && matchesType;
+    return matchesSearch && matchesStatus && matchesType && matchesPriority;
   });
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedSchedules = filteredSchedules.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage);
+
+  const StatCard = ({ icon: Icon, label, value, color, trend }) => (
+    <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-3 rounded-xl ${color} group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        {trend && (
+          <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">
+            {trend}
+          </span>
+        )}
+      </div>
+      <p className="text-3xl font-bold text-gray-800">{value}</p>
+      <p className="text-sm text-gray-500 mt-1">{label}</p>
+    </div>
+  );
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3d1209] mb-4"></div>
-        <p className="text-gray-500 dark:text-gray-400">Loading schedules...</p>
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-[#3d1209] rounded-full animate-spin"></div>
+          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-[#3d1209] animate-pulse" />
+        </div>
+        <p className="text-gray-500 mt-4 font-medium">Loading schedules...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className={`space-y-6 p-4 sm:p-6 transition-all duration-500 ${animation ? 'opacity-0' : 'opacity-100'}`}>
       <Modal />
       
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-4">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#3d1209] via-[#5a1b0e] to-[#7a2a15] rounded-3xl p-8 shadow-2xl">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full"></div>
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-amber-500/10 rounded-full"></div>
+        
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <CalendarDays className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-amber-300 text-sm font-semibold uppercase tracking-wider">Schedule Management</span>
+              </div>
+              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
                 Task Schedules
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">
-                Manage and monitor all scheduled tasks
+              <p className="text-amber-200/80 text-lg">
+                Manage and monitor all scheduled tasks in one place
               </p>
             </div>
             
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                    <BarChart3 className="w-6 h-6 text-[#3d1209] dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                  </div>
-                </div>
-              </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setViewMode(viewMode === 'table' ? 'calendar' : 'table')}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-300 font-medium"
+              >
+                {viewMode === 'table' ? <Calendar className="w-5 h-5" /> : <List className="w-5 h-5" />}
+                {viewMode === 'table' ? 'Calendar View' : 'Table View'}
+              </button>
               
-              <div className="bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-900/20 dark:to-orange-800/20 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                    <Calendar className="w-6 h-6 text-[#3d1209] dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.scheduled}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Scheduled</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                    <Zap className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-4 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                    <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.cancelled}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Cancelled</p>
-                  </div>
-                </div>
-              </div>
+              <button
+                onClick={() => generatePDF()}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#3d1209] hover:bg-amber-50 rounded-xl transition-all duration-300 font-medium shadow-lg"
+              >
+                <Download className="w-5 h-5" />
+                Export PDF
+              </button>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => setViewMode(viewMode === 'table' ? 'calendar' : 'table')}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-xl hover:shadow-lg transition-all duration-300"
-            >
-              {viewMode === 'table' ? (
-                <>
-                  <CalendarIcon className="w-5 h-5" />
-                  Calendar View
-                </>
-              ) : (
-                <>
-                  <FileText className="w-5 h-5" />
-                  Table View
-                </>
-              )}
-            </button>
-            
-            <button
-              onClick={() => generatePDF()}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
-            >
-              <Download className="w-5 h-5" />
-              Export PDF
-            </button>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-8">
+            <StatCard icon={BarChart3} label="Total" value={stats.total} color="bg-blue-100 text-blue-600" />
+            <StatCard icon={Calendar} label="Scheduled" value={stats.scheduled} color="bg-amber-100 text-amber-600" />
+            <StatCard icon={Zap} label="In Progress" value={stats.inProgress} color="bg-yellow-100 text-yellow-600" trend="+12%" />
+            <StatCard icon={CheckCircle} label="Completed" value={stats.completed} color="bg-green-100 text-green-600" trend="+8%" />
+            <StatCard icon={AlertCircle} label="Cancelled" value={stats.cancelled} color="bg-red-100 text-red-600" />
+            <StatCard icon={TrendingUp} label="High Priority" value={stats.urgent} color="bg-orange-100 text-orange-600" />
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+      {/* Filters Section */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
             <div className="relative">
@@ -687,7 +589,7 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 placeholder="Search schedules by task, ID, or staff..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none transition-all"
+                className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none transition-all"
               />
               {searchQuery && (
                 <button 
@@ -700,13 +602,13 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-wrap gap-3">
             <div className="relative">
-              <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select 
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none appearance-none transition-all"
+                className="pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none appearance-none cursor-pointer"
               >
                 <option value="all">All Status</option>
                 <option value="scheduled">Scheduled</option>
@@ -714,636 +616,568 @@ const ScheduleTable = ({ darkMode = false, refreshTrigger }) => {
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
             
             <div className="relative">
-              <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select 
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="pl-12 pr-10 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none appearance-none transition-all"
+                className="pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none appearance-none cursor-pointer"
               >
                 <option value="all">All Types</option>
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
               </select>
-              <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
             
-            {selectedSchedules.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center gap-4 bg-amber-50 dark:from-amber-900/20 p-4 rounded-xl">
-                <div className="flex items-center gap-2 text-[#3d1209] dark:text-amber-400 font-medium">
-                  <CheckSquare className="w-5 h-5" />
-                  {selectedSchedules.length} selected
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <select 
-                    value={bulkAction}
-                    onChange={(e) => setBulkAction(e.target.value)}
-                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent outline-none"
-                  >
-                    <option value="">Bulk Actions</option>
-                    <option value="completed">Mark as Completed</option>
-                    <option value="in progress">Mark as In Progress</option>
-                    <option value="cancelled">Mark as Cancelled</option>
-                    <option value="delete">Delete Selected</option>
-                  </select>
-                  
-                  <button
-                    onClick={handleBulkAction}
-                    disabled={!bulkAction}
-                    className="px-6 py-2 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-lg hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="relative">
+              <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select 
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none appearance-none cursor-pointer"
+              >
+                <option value="all">All Priorities</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
           </div>
         </div>
+        
+        {selectedSchedules.length > 0 && (
+          <div className="mt-4 flex items-center justify-between bg-amber-50 p-4 rounded-xl">
+            <div className="flex items-center gap-2 text-amber-800">
+              <CheckSquare className="w-5 h-5" />
+              <span className="font-medium">{selectedSchedules.length} schedules selected</span>
+            </div>
+            
+            <div className="flex gap-3">
+              <select 
+                value={bulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+                className="px-4 py-2 bg-white border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+              >
+                <option value="">Bulk Actions</option>
+                <option value="completed">Mark as Completed</option>
+                <option value="in progress">Mark as In Progress</option>
+                <option value="cancelled">Mark as Cancelled</option>
+                <option value="delete">Delete Selected</option>
+              </select>
+              
+              <button
+                onClick={handleBulkAction}
+                disabled={!bulkAction}
+                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Table View */}
       {viewMode === 'table' ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
                   <th className="w-12 px-6 py-4">
                     <input
                       type="checkbox"
-                      checked={selectedSchedules.length === filteredSchedules.length && filteredSchedules.length > 0}
+                      checked={selectedSchedules.length === paginatedSchedules.length && paginatedSchedules.length > 0}
                       onChange={handleSelectAll}
-                      className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30"
+                      className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30 cursor-pointer"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Schedule Details</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Timeline</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task Details</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Timeline</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Team</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Priority</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredSchedules.length === 0 ? (
+              <tbody className="divide-y divide-gray-100">
+                {paginatedSchedules.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-24 text-center">
                       <div className="flex flex-col items-center gap-4">
-                        <Search className="w-16 h-16 text-gray-300 dark:text-gray-600" />
-                        <div className="space-y-2">
-                          <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                            {searchQuery ? 'No schedules found' : 'No schedules available'}
-                          </p>
-                          <p className="text-gray-500 dark:text-gray-500">
-                            {searchQuery ? 'Try adjusting your search terms' : 'Create a new schedule to get started'}
-                          </p>
-                          {(searchQuery || filterStatus !== 'all' || filterType !== 'all') && (
-                            <button
-                              onClick={() => {
-                                setSearchQuery('');
-                                setFilterStatus('all');
-                                setFilterType('all');
-                              }}
-                              className="inline-flex items-center gap-2 px-4 py-2 text-[#3d1209] hover:text-amber-700"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                              Clear filters
-                            </button>
-                          )}
+                        <Search className="w-16 h-16 text-gray-300" />
+                        <div>
+                          <p className="text-lg font-semibold text-gray-600">No schedules found</p>
+                          <p className="text-gray-400">Try adjusting your search or filters</p>
                         </div>
+                        <button
+                          onClick={() => {
+                            setSearchQuery('');
+                            setFilterStatus('all');
+                            setFilterType('all');
+                            setFilterPriority('all');
+                          }}
+                          className="text-[#3d1209] hover:text-amber-700 text-sm font-medium"
+                        >
+                          Clear all filters
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  filteredSchedules.map(schedule => (
-                    <React.Fragment key={schedule.id}>
-                      <tr className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${editingId === schedule.id ? 'bg-amber-50 dark:bg-amber-900/10' : ''}`}>
-                        <td className="px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedSchedules.includes(schedule.id)}
-                            onChange={() => handleSelectSchedule(schedule.id)}
-                            className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30"
-                          />
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[300px]">
-                          <div className="space-y-3">
+                  paginatedSchedules.map((schedule, idx) => {
+                    const statusConfig = getStatusConfig(schedule.status);
+                    const priorityConfig = getPriorityConfig(schedule.priority);
+                    const isEditing = editingId === schedule.id;
+                    
+                    return (
+                      <React.Fragment key={schedule.id}>
+                        <tr className={`hover:bg-gray-50 transition-colors ${isEditing ? 'bg-amber-50' : ''}`}>
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedSchedules.includes(schedule.id)}
+                              onChange={() => handleSelectSchedule(schedule.id)}
+                              className="w-5 h-5 rounded border-gray-300 text-[#3d1209] focus:ring-[#3d1209]/30 cursor-pointer"
+                            />
+                          </td>
+                          
+                          <td className="px-6 py-4">
                             <div className="space-y-2">
-                              <div className="text-xs font-mono text-gray-400 dark:text-gray-500">
-                                {schedule.scheduleId}
-                              </div>
-                              
-                              {editingId === schedule.id ? (
-                                <div className="space-y-3">
+                              <div className="text-xs font-mono text-gray-400">{schedule.scheduleId}</div>
+                              {isEditing ? (
+                                <div className="space-y-2">
                                   <input
                                     type="text"
                                     name="taskTitle"
                                     value={editFormData.taskTitle}
                                     onChange={handleFormChange}
-                                    className="w-full px-4 py-2 text-lg font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none"
                                     placeholder="Task Title"
-                                    required
-                                    autoFocus
                                   />
                                   <textarea
                                     name="taskDescription"
                                     value={editFormData.taskDescription}
                                     onChange={handleFormChange}
-                                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent resize-none"
-                                    placeholder="Task Description"
-                                    rows="2"
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-[#3d1209] outline-none resize-none"
+                                    placeholder="Description"
                                   />
                                 </div>
                               ) : (
                                 <>
                                   <h3 
-                                    className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 cursor-pointer hover:text-[#3d1209] dark:hover:text-amber-400 transition-colors"
+                                    className="font-semibold text-gray-800 cursor-pointer hover:text-[#3d1209] transition-colors flex items-center gap-2"
                                     onClick={() => toggleExpandSchedule(schedule.id)}
                                   >
                                     {schedule.taskTitle}
-                                    {expandedSchedule === schedule.id ? (
-                                      <ChevronUp className="w-4 h-4" />
-                                    ) : (
+                                    {expandedSchedule === schedule.id ? 
+                                      <ChevronUp className="w-4 h-4" /> : 
                                       <ChevronDown className="w-4 h-4" />
-                                    )}
+                                    }
                                   </h3>
-                                  <p className="text-gray-600 dark:text-gray-400 line-clamp-2">
-                                    {schedule.taskDescription}
-                                  </p>
+                                  <p className="text-sm text-gray-500 line-clamp-2">{schedule.taskDescription}</p>
+                                  <div className="flex gap-2 mt-2">
+                                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                                      {schedule.scheduleType}
+                                    </span>
+                                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                                      {schedule.department}
+                                    </span>
+                                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {schedule.estimatedHours}h
+                                    </span>
+                                  </div>
                                 </>
                               )}
                             </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              <span className="px-3 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300 rounded-full">
-                                {schedule.scheduleType}
-                              </span>
-                              <span className="px-3 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full">
-                                {schedule.department}
-                              </span>
-                              <span className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {schedule.estimatedHours}h
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[200px]">
-                          <div className="space-y-2">
-                            <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Start</div>
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {formatDate(schedule.scheduledDate)}
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-400">Start</div>
+                              <div className="font-medium text-gray-700">{formatDateTime(schedule.scheduledDate)}</div>
+                              {schedule.endDate && (
+                                <>
+                                  <div className="text-xs text-gray-400 mt-2">End</div>
+                                  <div className="font-medium text-gray-700">{formatDateTime(schedule.endDate)}</div>
+                                </>
+                              )}
+                              <div className="flex items-center gap-1 text-xs text-amber-600 mt-2">
+                                <RefreshCw className="w-3 h-3" />
+                                {schedule.recurrence}
                               </div>
                             </div>
-                            {schedule.endDate && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">End</div>
-                                <div className="font-medium text-gray-900 dark:text-white">
-                                  {formatDate(schedule.endDate)}
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-sm text-[#3d1209] dark:text-amber-400">
-                              <RefreshCw className="w-4 h-4" />
-                              {schedule.recurrence}
-                            </div>
-                          </div>
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[150px]">
-                          <div className="space-y-3">
-                            <div className="flex -space-x-2">
-                              {schedule.assignments?.slice(0, 3).map((staff, index) => (
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            <div className="flex -space-x-2 mb-2">
+                              {schedule.assignments?.slice(0, 3).map((staff, idx) => (
                                 <div
                                   key={staff.staffId}
-                                  className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center text-white font-medium text-sm"
+                                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white font-medium text-sm shadow-sm"
                                   style={{ backgroundColor: getAvatarColor(staff.staffId) }}
-                                  title={`${staff.staffName} (${staff.email})`}
+                                  title={staff.staffName}
                                 >
-                                  {staff.staffName?.charAt(0) || '?'}
+                                  {staff.staffName?.charAt(0).toUpperCase()}
                                 </div>
                               ))}
                               {schedule.staffCount > 3 && (
-                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 font-medium text-xs">
+                                <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-gray-600 text-xs font-medium">
                                   +{schedule.staffCount - 3}
                                 </div>
                               )}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                              {schedule.staffCount} staff assigned
-                            </div>
-                          </div>
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[120px]">
-                          {editingId === schedule.id ? (
-                            <select
-                              name="priority"
-                              value={editFormData.priority}
-                              onChange={handleFormChange}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
-                            >
-                              <option value="low">Low</option>
-                              <option value="medium">Medium</option>
-                              <option value="high">High</option>
-                              <option value="urgent">Urgent</option>
-                            </select>
-                          ) : (
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium ${
-                              getPriorityColor(schedule.priority) === 'red' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                              getPriorityColor(schedule.priority) === 'orange' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' :
-                              getPriorityColor(schedule.priority) === 'blue' ? 'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300' :
-                              'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                            }`}>
-                              <span className="text-lg">{getPriorityIcon(schedule.priority)}</span>
-                              {schedule.priority}
-                            </div>
-                          )}
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[120px]">
-                          {editingId === schedule.id ? (
-                            <select
-                              name="status"
-                              value={editFormData.status}
-                              onChange={handleFormChange}
-                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 focus:border-transparent"
-                            >
-                              <option value="scheduled">Scheduled</option>
-                              <option value="in progress">In Progress</option>
-                              <option value="completed">Completed</option>
-                              <option value="cancelled">Cancelled</option>
-                            </select>
-                          ) : (
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium ${
-                              getStatusColor(schedule.status) === 'blue' ? 'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300' :
-                              getStatusColor(schedule.status) === 'yellow' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
-                              getStatusColor(schedule.status) === 'green' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                              getStatusColor(schedule.status) === 'red' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                              'bg-amber-100 dark:bg-amber-900/30 text-[#3d1209] dark:text-amber-300'
-                            }`}>
-                              <span className={`w-2 h-2 rounded-full ${
-                                getStatusColor(schedule.status) === 'blue' ? 'bg-[#3d1209]' :
-                                getStatusColor(schedule.status) === 'yellow' ? 'bg-yellow-500' :
-                                getStatusColor(schedule.status) === 'green' ? 'bg-green-500' :
-                                getStatusColor(schedule.status) === 'red' ? 'bg-red-500' :
-                                'bg-amber-500'
-                              }`}></span>
-                              {schedule.status}
-                            </div>
-                          )}
-                        </td>
-                        
-                        <td className="px-6 py-4 min-w-[200px]">
-                          <div className="flex flex-col gap-3">
+                            <div className="text-sm text-gray-500">{schedule.staffCount} assigned</div>
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            {isEditing ? (
+                              <select
+                                name="priority"
+                                value={editFormData.priority}
+                                onChange={handleFormChange}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 outline-none"
+                              >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                              </select>
+                            ) : (
+                              <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${priorityConfig.color}`}>
+                                <span>{priorityConfig.icon}</span>
+                                {priorityConfig.label}
+                              </span>
+                            )}
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            {isEditing ? (
+                              <select
+                                name="status"
+                                value={editFormData.status}
+                                onChange={handleFormChange}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3d1209]/30 outline-none"
+                              >
+                                <option value="scheduled">Scheduled</option>
+                                <option value="in progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                              </select>
+                            ) : (
+                              <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${statusConfig.color}`}>
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'currentColor' }}></span>
+                                {statusConfig.label}
+                              </span>
+                            )}
+                          </td>
+                          
+                          <td className="px-6 py-4">
                             <div className="flex gap-2">
-                              {editingId === schedule.id ? (
+                              {isEditing ? (
                                 <>
                                   <button
                                     onClick={() => handleSaveEdit(schedule.id)}
-                                    className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                                    title="Save Changes"
+                                    className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
+                                    title="Save"
                                   >
-                                    <CheckCircle className="w-5 h-5" />
+                                    <CheckCircle className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={handleCancelEdit}
-                                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                    className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-all"
                                     title="Cancel"
                                   >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-4 h-4" />
                                   </button>
                                 </>
                               ) : (
                                 <>
                                   <button
                                     onClick={() => handleEditClick(schedule)}
-                                    className="p-2 bg-[#3d1209] text-white rounded-lg hover:bg-[#5a1b0e] transition-colors"
+                                    className="p-2 bg-[#3d1209] text-white rounded-lg hover:bg-[#5a1b0e] transition-all"
                                     title="Edit"
                                   >
-                                    <Edit className="w-5 h-5" />
+                                    <Edit className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={() => generatePDF(schedule)}
-                                    className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-                                    title="Print PDF"
+                                    className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all"
+                                    title="Export PDF"
                                   >
-                                    <Printer className="w-5 h-5" />
+                                    <Printer className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteSchedule(schedule.id, schedule.taskTitle)}
-                                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
                                     title="Delete"
                                   >
-                                    <Trash2 className="w-5 h-5" />
-                                  </button>
-                                  <button
-                                    onClick={() => toggleExpandSchedule(schedule.id)}
-                                    className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                                    title="View Details"
-                                  >
-                                    <Eye className="w-5 h-5" />
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </>
                               )}
                             </div>
                             
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 mt-2">
                               <button
                                 onClick={() => handleStatusChange(schedule.id, 'completed')}
-                                className="flex-1 py-1.5 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors text-xs font-medium"
+                                className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
                               >
                                 Complete
                               </button>
                               <button
                                 onClick={() => handleStatusChange(schedule.id, 'in progress')}
-                                className="flex-1 py-1.5 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/30 transition-colors text-xs font-medium"
+                                className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors"
                               >
-                                In Progress
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(schedule.id, 'cancelled')}
-                                className="flex-1 py-1.5 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors text-xs font-medium"
-                              >
-                                Cancel
+                                Progress
                               </button>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                      
-                      {/* Expanded Details */}
-                      {expandedSchedule === schedule.id && (
-                        <tr>
-                          <td colSpan="7" className="px-6 py-6 bg-gray-50 dark:bg-gray-700/20">
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                              <div className="space-y-4">
-                                <h4 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                  <FileText className="w-5 h-5" />
-                                  Task Details
-                                </h4>
-                                <div className="space-y-3">
-                                  <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Description</div>
-                                    <div className="text-gray-700 dark:text-gray-300">{schedule.taskDescription}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Notes</div>
-                                    <div className="text-gray-700 dark:text-gray-300">{schedule.notes || 'No notes provided'}</div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Created</div>
-                                      <div className="text-sm text-gray-700 dark:text-gray-300">{formatDate(schedule.createdAt)}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Updated</div>
-                                      <div className="text-sm text-gray-700 dark:text-gray-300">{formatDate(schedule.updatedAt)}</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                <h4 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                  <Users className="w-5 h-5" />
-                                  Staff Assignments
-                                </h4>
-                                <div className="space-y-3">
-                                  {schedule.assignments?.map((staff) => (
-                                    <div key={staff.staffId} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
-                                      <div
-                                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                                        style={{ backgroundColor: getAvatarColor(staff.staffId) }}
-                                      >
-                                        {staff.staffName?.charAt(0) || '?'}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-gray-900 dark:text-white">{staff.staffName}</div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                          <Mail className="w-3 h-3" />
-                                          {staff.email}
-                                        </div>
-                                      </div>
-                                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                        staff.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
-                                        staff.status === 'accepted' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                                        'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                                      }`}>
-                                        {staff.status}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                <h4 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                  <Settings className="w-5 h-5" />
-                                  Schedule Settings
-                                </h4>
-                                <div className="space-y-3">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Type</div>
-                                      <div className="font-medium text-gray-700 dark:text-gray-300">{schedule.scheduleType}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Recurrence</div>
-                                      <div className="font-medium text-gray-700 dark:text-gray-300">{schedule.recurrence}</div>
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Email Notifications</div>
-                                      <div className={`font-medium ${schedule.sendEmail ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                        {schedule.sendEmail ? 'Enabled' : 'Disabled'}
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Email Sent</div>
-                                      <div className={`font-medium ${schedule.emailSent ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                                        {schedule.emailSent ? 'Yes' : 'No'}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {schedule.requiredSkills?.length > 0 && (
-                                    <div>
-                                      <div className="text-sm text-gray-500 dark:text-gray-400">Required Skills</div>
-                                      <div className="flex flex-wrap gap-2 mt-2">
-                                        {schedule.requiredSkills.map((skill, index) => (
-                                          <span key={index} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                                            {skill}
-                                          </span>
-                                        ))}
-                                      </div>
+                           </td>
+                         </tr>
+                         
+                        {expandedSchedule === schedule.id && (
+                          <tr>
+                            <td colSpan="7" className="px-6 py-6 bg-gradient-to-r from-gray-50 to-white">
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <FileText className="w-4 h-4" />
+                                    Full Description
+                                  </h4>
+                                  <p className="text-gray-600 text-sm leading-relaxed">{schedule.taskDescription}</p>
+                                  {schedule.notes && (
+                                    <div className="mt-3 p-3 bg-amber-50 rounded-lg">
+                                      <p className="text-xs text-amber-600 font-medium">Notes:</p>
+                                      <p className="text-sm text-gray-600">{schedule.notes}</p>
                                     </div>
                                   )}
                                 </div>
                                 
-                                <div className="flex flex-wrap gap-3 pt-4">
-                                  <button
-                                    onClick={() => generatePDF(schedule)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#3d1209] hover:bg-[#5a1b0e] text-white rounded-lg hover:shadow-md transition-all"
-                                  >
-                                    <Download className="w-4 h-4" />
-                                    Export PDF
-                                  </button>
-                                  <button
-                                    onClick={() => handleEditClick(schedule)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => showAlert('info', 'Send Reminder', `Send email to assigned staff?`)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors"
-                                  >
-                                    <Send className="w-4 h-4" />
-                                    Reminder
-                                  </button>
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <Users className="w-4 h-4" />
+                                    Assigned Staff ({schedule.assignments?.length || 0})
+                                  </h4>
+                                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {schedule.assignments?.map((staff) => (
+                                      <div key={staff.staffId} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                                        <div
+                                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                                          style={{ backgroundColor: getAvatarColor(staff.staffId) }}
+                                        >
+                                          {staff.staffName?.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="font-medium text-gray-800 text-sm">{staff.staffName}</div>
+                                          <div className="text-xs text-gray-500 flex items-center gap-1">
+                                            <Mail className="w-3 h-3" />
+                                            {staff.email}
+                                          </div>
+                                        </div>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                          staff.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                          staff.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                                          'bg-red-100 text-red-700'
+                                        }`}>
+                                          {staff.status}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Schedule Info
+                                  </h4>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between py-2 border-b border-gray-100">
+                                      <span className="text-gray-500">Created:</span>
+                                      <span className="text-gray-700">{formatDateTime(schedule.createdAt)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-gray-100">
+                                      <span className="text-gray-500">Last Updated:</span>
+                                      <span className="text-gray-700">{formatDateTime(schedule.updatedAt)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-gray-100">
+                                      <span className="text-gray-500">Email Notifications:</span>
+                                      <span className={schedule.sendEmail ? 'text-green-600' : 'text-gray-400'}>
+                                        {schedule.sendEmail ? 'Enabled' : 'Disabled'}
+                                      </span>
+                                    </div>
+                                    {schedule.requiredSkills?.length > 0 && (
+                                      <div className="py-2">
+                                        <div className="text-gray-500 mb-2">Required Skills:</div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {schedule.requiredSkills.map((skill, i) => (
+                                            <span key={i} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                                              {skill}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      ) : (
-        // Calendar View
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <CalendarIcon className="w-6 h-6" />
-                Schedule Calendar
-              </h3>
-              <div className="flex items-center gap-4">
-                <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                  ← Previous
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredSchedules.length)} of {filteredSchedules.length}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Previous
                 </button>
-                <span className="font-medium text-gray-900 dark:text-white">January 2026</span>
-                <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                  Next →
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) pageNum = i + 1;
+                    else if (currentPage <= 3) pageNum = i + 1;
+                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    else pageNum = currentPage - 2 + i;
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                          currentPage === pageNum
+                            ? 'bg-[#3d1209] text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
                 </button>
               </div>
             </div>
+          )}
+        </div>
+      ) : (
+        // Calendar View
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <CalendarDays className="w-6 h-6 text-[#3d1209]" />
+              Schedule Calendar
+            </h3>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                Week
+              </button>
+              <button className="px-4 py-2 bg-[#3d1209] text-white rounded-lg hover:bg-[#5a1b0e] transition-colors">
+                Month
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-xl overflow-hidden">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+              <div key={day} className="bg-gray-50 p-3 text-center font-semibold text-gray-600 text-sm">
+                {day}
+              </div>
+            ))}
             
-            <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="bg-gray-50 dark:bg-gray-800 p-4 text-center font-medium text-gray-700 dark:text-gray-300">
-                  {day}
-                </div>
-              ))}
+            {Array.from({ length: 35 }, (_, i) => {
+              const dayNumber = i - 2; // Adjust to start from correct date
+              const daySchedules = filteredSchedules.filter(schedule => {
+                const scheduleDate = new Date(schedule.scheduledDate);
+                return scheduleDate.getDate() === dayNumber && scheduleDate.getMonth() === 0;
+              });
               
-              {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
-                const daySchedules = filteredSchedules.filter(schedule => {
-                  const scheduleDate = new Date(schedule.scheduledDate);
-                  return scheduleDate.getDate() === day;
-                });
-                
-                return (
-                  <div key={day} className="bg-white dark:bg-gray-900 min-h-[120px] p-3">
-                    <div className={`font-medium mb-2 ${day === 3 ? 'text-[#3d1209] dark:text-amber-400 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {day}
-                    </div>
-                    <div className="space-y-2">
-                      {daySchedules.slice(0, 2).map(schedule => (
+              return (
+                <div key={i} className="bg-white min-h-[100px] p-2">
+                  <div className={`text-sm font-medium mb-1 ${dayNumber === 3 ? 'text-[#3d1209]' : 'text-gray-500'}`}>
+                    {dayNumber > 0 && dayNumber <= 31 ? dayNumber : ''}
+                  </div>
+                  <div className="space-y-1">
+                    {daySchedules.slice(0, 2).map(schedule => {
+                      const priorityConfig = getPriorityConfig(schedule.priority);
+                      return (
                         <div
                           key={schedule.id}
-                          className={`p-2 rounded-lg text-xs cursor-pointer transition-all hover:scale-[1.02] ${
-                            getPriorityColor(schedule.priority) === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500' :
-                            getPriorityColor(schedule.priority) === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500' :
-                            getPriorityColor(schedule.priority) === 'blue' ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-[#3d1209]' :
-                            'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500'
-                          }`}
+                          className={`p-1.5 rounded text-xs cursor-pointer hover:scale-105 transition-transform ${priorityConfig.color.replace('text', 'bg').replace('text-', 'bg-').replace('700', '100')}`}
                           onClick={() => toggleExpandSchedule(schedule.id)}
+                          title={schedule.taskTitle}
                         >
-                          <div className="font-medium truncate">{schedule.taskTitle}</div>
-                          <div className="flex items-center gap-1 mt-1">
-                            {schedule.assignments?.slice(0, 2).map(staff => (
-                              <div
-                                key={staff.staffId}
-                                className="w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center text-white"
-                                style={{ backgroundColor: getAvatarColor(staff.staffId) }}
-                                title={staff.staffName}
-                              >
-                                {staff.staffName?.charAt(0)}
-                              </div>
-                            ))}
-                          </div>
+                          <div className="truncate font-medium">{schedule.taskTitle}</div>
                         </div>
-                      ))}
-                      {daySchedules.length > 2 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          +{daySchedules.length - 2} more
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })}
+                    {daySchedules.length > 2 && (
+                      <div className="text-xs text-gray-400">+{daySchedules.length - 2} more</div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-gray-600 dark:text-gray-400">
-            Showing {filteredSchedules.length} of {schedules.length} schedules
+      <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span className="text-xs text-gray-600">Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+              <span className="text-xs text-gray-600">In Progress</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span className="text-xs text-gray-600">Scheduled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span className="text-xs text-gray-600">Cancelled</span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              ← Previous
-            </button>
-            <div className="flex gap-1">
-              {[1, 2, 3].map(page => (
-                <button
-                  key={page}
-                  className={`w-10 h-10 rounded-lg font-medium ${
-                    page === 1
-                      ? 'bg-[#3d1209] text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-              Next →
-            </button>
+          <div className="text-sm text-gray-500">
+            Last updated: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-// Add missing icon component
-const Settings = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
 
 export default ScheduleTable;

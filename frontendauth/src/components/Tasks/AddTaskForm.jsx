@@ -6,7 +6,7 @@ import {
   X, Info, Star, Award, Clock
 } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
   const [formData, setFormData] = useState({
@@ -472,44 +472,6 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
       )}
 
       {/* Animations */}
-      <style jsx global>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-          100% { transform: translateY(0px) rotate(360deg); }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(30px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        
-        .animate-slide-in-up {
-          animation: slide-in-up 0.6s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        .animation-delay-1000 {
-          animation-delay: 1000ms;
-        }
-      `}</style>
     </>
   );
 };

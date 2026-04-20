@@ -873,36 +873,6 @@ const Dashboard = ({ darkMode, setDarkMode }) => {
 
       {/* Add padding to bottom on mobile */}
       {isMobile && <div className="h-16"></div>}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out;
-        }
-        
-        .animate-slide-in-right {
-          animation: slideInRight 0.5s ease-out;
-        }
-        
-        .animation-delay-1000 {
-          animation-delay: 1000ms;
-        }
-      `}</style>
     </div>
   );
 };

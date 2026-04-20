@@ -29,10 +29,20 @@ app.use(helmet({
   contentSecurityPolicy: false // Disable CSP for development
 }));
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: 'http://localhost:3000', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -48,7 +58,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task_sche
 .then(() => console.log('✅ MongoDB connected successfully'))
 .catch(err => {
   console.error('❌ MongoDB connection error:', err);
-  process.exit(1);
+  // Don't exit in serverless environments
+  if (process.env.NODE_ENV !== 'production') process.exit(1);
 });
 
 // Connection events

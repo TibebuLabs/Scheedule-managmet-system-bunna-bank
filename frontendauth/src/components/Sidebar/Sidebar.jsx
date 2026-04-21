@@ -1,246 +1,239 @@
 import React, { useState, useEffect } from 'react';
-import MenuItem from './MenuItem';
-import './Sidebar.css';
-// Import the Bunna Bank logo image
 import bunnaBankLogo from '../../assets/bunnab.png';
+import {
+  MdDashboard, MdPeople, MdTask, MdCalendarMonth,
+  MdBarChart, MdSettings, MdPersonAdd, MdVisibility,
+  MdAddTask, MdSchedule, MdChevronLeft, MdChevronRight,
+  MdClose, MdExpandMore, MdCircle
+} from 'react-icons/md';
+import './Sidebar.css';
 
-const Sidebar = ({ 
-  sidebarOpen, 
-  setSidebarOpen, 
-  darkMode, 
-  activeMenu, 
-  activeSubMenu, 
-  setActiveMenu, 
-  setActiveSubMenu,
-  isMobile,
-  mobileMenuOpen,
-  setMobileMenuOpen
+const menuItems = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: MdDashboard,
+    submenu: []
+  },
+  {
+    id: 'staff',
+    label: 'Staff',
+    icon: MdPeople,
+    submenu: [
+      { id: 'add-staff', label: 'Add Staff', icon: MdPersonAdd },
+      { id: 'view-staff', label: 'View Staff', icon: MdVisibility }
+    ]
+  },
+  {
+    id: 'task',
+    label: 'Tasks',
+    icon: MdTask,
+    submenu: [
+      { id: 'add-task', label: 'Add Task', icon: MdAddTask },
+      { id: 'view-task', label: 'View Tasks', icon: MdVisibility }
+    ]
+  },
+  {
+    id: 'TaskSchedule',
+    label: 'Schedule',
+    icon: MdCalendarMonth,
+    submenu: [
+      { id: 'add-schedule', label: 'Add Schedule', icon: MdSchedule },
+      { id: 'view-schedule', label: 'View Schedule', icon: MdVisibility }
+    ]
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    icon: MdBarChart,
+    submenu: []
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: MdSettings,
+    submenu: []
+  }
+];
+
+const MenuItem = ({ item, sidebarOpen, activeMenu, activeSubMenu, setActiveMenu, setActiveSubMenu, onItemClick }) => {
+  const Icon = item.icon;
+  const isActive = activeMenu === item.id;
+  const hasSubmenu = item.submenu.length > 0;
+  const isExpanded = isActive && hasSubmenu;
+
+  const handleClick = () => {
+    setActiveMenu(item.id);
+    if (hasSubmenu) {
+      setActiveSubMenu(isActive ? null : item.submenu[0].id);
+    } else {
+      setActiveSubMenu(null);
+      onItemClick();
+    }
+  };
+
+  return (
+    <li>
+      <button
+        onClick={handleClick}
+        title={!sidebarOpen ? item.label : ''}
+        className={`sidebar-menu-btn ${isActive ? 'active' : ''} ${!sidebarOpen ? 'collapsed' : ''}`}
+      >
+        <span className="menu-icon-wrap">
+          <Icon size={20} />
+        </span>
+        {sidebarOpen && (
+          <>
+            <span className="menu-label">{item.label}</span>
+            {hasSubmenu && (
+              <MdExpandMore
+                size={18}
+                className={`menu-arrow ${isExpanded ? 'rotated' : ''}`}
+              />
+            )}
+          </>
+        )}
+        {isActive && <span className="active-bar" />}
+      </button>
+
+      {sidebarOpen && isExpanded && (
+        <ul className="submenu">
+          {item.submenu.map(sub => {
+            const SubIcon = sub.icon;
+            const isSubActive = activeSubMenu === sub.id;
+            return (
+              <li key={sub.id}>
+                <button
+                  onClick={() => { setActiveSubMenu(sub.id); onItemClick(); }}
+                  className={`submenu-btn ${isSubActive ? 'active' : ''}`}
+                >
+                  <SubIcon size={15} />
+                  <span>{sub.label}</span>
+                  {isSubActive && <MdCircle size={6} className="sub-dot" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </li>
+  );
+};
+
+const Sidebar = ({
+  sidebarOpen, setSidebarOpen,
+  darkMode,
+  activeMenu, activeSubMenu,
+  setActiveMenu, setActiveSubMenu,
+  isMobile, mobileMenuOpen, setMobileMenuOpen
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
 
-  const menuItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: '📊',
-      submenu: []
-    },
-    {
-      id: 'staff',
-      label: 'Staff',
-      icon: '👥',
-      submenu: [
-        { id: 'add-staff', label: 'Add Staff', icon: '➕' },
-        { id: 'view-staff', label: 'View Staff', icon: '👁️' }
-      ]
-    },
-    {
-      id: 'task',
-      label: 'Tasks',
-      icon: '✅',
-      submenu: [
-        { id: 'add-task', label: 'Add Task', icon: '➕' },
-        { id: 'view-task', label: 'View Tasks', icon: '📋' }
-      ]
-    },
-    {
-      id: 'TaskSchedule',
-      label: 'Schedule',
-      icon: '📅',
-      submenu: [
-        { id: 'add-schedule', label: 'Add Schedule', icon: '➕' },
-        { id: 'view-schedule', label: 'View Schedule', icon: '👁️' }
-      ]
-    },
-    {
-      id: 'reports',
-      label: 'Reports',
-      icon: '📈',
-      submenu: []
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: '⚙️',
-      submenu: []
-    }
-  ];
-
-  // Handle mobile menu close when clicking on menu item
-  const handleMenuItemClick = () => {
-    if (isMobile && sidebarOpen) {
+  const closeOnMobile = () => {
+    if (isMobile) {
       setSidebarOpen(false);
       setMobileMenuOpen(false);
-      setShowOverlay(false);
     }
   };
 
-  // Handle overlay click (close sidebar on mobile)
-  const handleOverlayClick = () => {
-    setSidebarOpen(false);
-    setMobileMenuOpen(false);
-    setShowOverlay(false);
-  };
-
-  // Handle escape key to close sidebar
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && sidebarOpen && isMobile) {
-        setSidebarOpen(false);
-        setMobileMenuOpen(false);
-        setShowOverlay(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [sidebarOpen, isMobile, setMobileMenuOpen]);
-
-  // Manage overlay when sidebar opens/closes on mobile
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       setShowOverlay(true);
       document.body.style.overflow = 'hidden';
     } else {
       setShowOverlay(false);
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
     }
-
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen, isMobile]);
 
-  // Auto-close sidebar when resizing to desktop
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024 && sidebarOpen) {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && isMobile && sidebarOpen) {
         setSidebarOpen(false);
         setMobileMenuOpen(false);
       }
     };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sidebarOpen, isMobile, setSidebarOpen, setMobileMenuOpen]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarOpen, setMobileMenuOpen]);
-
-  // Don't render sidebar component on mobile when closed
   if (isMobile && !sidebarOpen) return null;
 
   return (
     <>
-      {/* Mobile Overlay */}
       {showOverlay && isMobile && (
-        <div 
-          className="sidebar-overlay"
-          onClick={handleOverlayClick}
-          aria-label="Close sidebar"
-        />
+        <div className="sidebar-overlay" onClick={closeOnMobile} />
       )}
 
-      <aside 
-        className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'} ${darkMode ? 'dark' : 'light'} ${isMobile ? 'mobile' : 'desktop'}`}
-        onMouseEnter={() => !isMobile && setIsHovered(true)}
-        onMouseLeave={() => !isMobile && setIsHovered(false)}
-      >
+      <aside className={`sidebar ${sidebarOpen ? 'open' : 'collapsed'} ${isMobile ? 'mobile' : 'desktop'}`}>
+
+        {/* Header */}
         <div className="sidebar-header">
-          <div className="logo-container">
-            <div className="logo">
-              <div className="logo-icon-wrapper">
-                {/* Bunna Bank Logo Image */}
-                <div className="logo-image-container">
-                  <img 
-                    src={bunnaBankLogo}
-                    alt="Bunna Bank Logo"
-                    className="bunna-bank-logo"
-                  />
-                </div>
-                {sidebarOpen && (
-                  <div className="logo-glow"></div>
-                )}
-              </div>
-              {sidebarOpen && (
-                <div className="logo-text">
-                  <h2>Bunna Bank</h2>
-                  <p>Staff Portal</p>
-                </div>
-              )}
+          <div className="sidebar-brand">
+            <div className="brand-logo">
+              <img src={bunnaBankLogo} alt="Bunna Bank" />
             </div>
-            
-            {/* Desktop Toggle */}
-            {!isMobile && (
-              <button 
-                className="sidebar-toggle" 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                <span className={`toggle-icon ${sidebarOpen ? 'open' : ''}`}>
-                  {sidebarOpen ? '‹' : '›'}
-                </span>
-              </button>
-            )}
-            
-            {/* Mobile Close Button */}
-            {isMobile && (
-              <button 
-                className="sidebar-close"
-                onClick={handleOverlayClick}
-                aria-label="Close sidebar"
-              >
-                <span className="close-icon">×</span>
-              </button>
+            {sidebarOpen && (
+              <div className="brand-text">
+                <span className="brand-name">Bunna Bank</span>
+                <span className="brand-sub">Staff Portal</span>
+              </div>
             )}
           </div>
+
+          {!isMobile && (
+            <button
+              className="toggle-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? <MdChevronLeft size={20} /> : <MdChevronRight size={20} />}
+            </button>
+          )}
+
+          {isMobile && (
+            <button className="close-btn" onClick={closeOnMobile} aria-label="Close">
+              <MdClose size={22} />
+            </button>
+          )}
         </div>
 
+        {/* Nav */}
         <nav className="sidebar-nav">
+          {sidebarOpen && <p className="nav-section-label">MAIN MENU</p>}
           <ul className="menu-list">
-            {menuItems.map((item) => (
+            {menuItems.map(item => (
               <MenuItem
                 key={item.id}
                 item={item}
                 sidebarOpen={sidebarOpen}
                 activeMenu={activeMenu}
                 activeSubMenu={activeSubMenu}
-                setActiveMenu={(id) => {
-                  setActiveMenu(id);
-                  handleMenuItemClick();
-                }}
-                setActiveSubMenu={(id) => {
-                  setActiveSubMenu(id);
-                  handleMenuItemClick();
-                }}
-                darkMode={darkMode}
-                isMobile={isMobile}
+                setActiveMenu={setActiveMenu}
+                setActiveSubMenu={setActiveSubMenu}
+                onItemClick={closeOnMobile}
               />
             ))}
           </ul>
         </nav>
 
+        {/* Footer */}
         <div className="sidebar-footer">
-          <div 
-            className="user-profile"
-            onClick={() => {
-              setActiveMenu('settings');
-              setActiveSubMenu(null);
-              handleMenuItemClick();
-            }}
+          <button
+            className={`user-card ${!sidebarOpen ? 'collapsed' : ''}`}
+            onClick={() => { setActiveMenu('settings'); setActiveSubMenu(null); closeOnMobile(); }}
+            title={!sidebarOpen ? 'Settings' : ''}
           >
-            <div className="avatar-container">
-              <div className="avatar">A</div>
-              <div className="status-indicator"></div>
-            </div>
+            <div className="user-avatar">A</div>
             {sidebarOpen && (
-              <div className="user-info">
-                <h4>Admin User</h4>
-                <p>Administrator</p>
+              <div className="user-meta">
+                <span className="user-name">Admin User</span>
+                <span className="user-role">Administrator</span>
               </div>
             )}
-            {!sidebarOpen && !isMobile && (
-              <div className="user-tooltip">Admin</div>
-            )}
-          </div>
+            <span className="online-dot" />
+          </button>
         </div>
       </aside>
     </>

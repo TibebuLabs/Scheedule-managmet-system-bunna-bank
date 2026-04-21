@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import './Pages.css';
 
-const SettingsPage = ({ user, darkMode, currentDarkMode, onDarkModeToggle }) => {
+const SettingsPage = ({ user }) => {
   const [settings, setSettings] = useState({
     emailNotifications: true,
     pushNotifications: true,
     weeklyReports: true,
     taskReminders: true,
     twoFactorAuth: false,
-    darkMode: currentDarkMode || false,
     language: 'en',
     timezone: 'Africa/Addis_Ababa',
     autoSave: true,
@@ -22,16 +21,7 @@ const SettingsPage = ({ user, darkMode, currentDarkMode, onDarkModeToggle }) => 
   });
 
   const handleSettingChange = (setting) => {
-    const newValue = !settings[setting];
-    setSettings(prev => ({
-      ...prev,
-      [setting]: newValue
-    }));
-
-    // Handle dark mode toggle
-    if (setting === 'darkMode' && onDarkModeToggle) {
-      onDarkModeToggle(newValue);
-    }
+    setSettings(prev => ({ ...prev, [setting]: !prev[setting] }));
   };
 
   const handlePasswordChange = () => {
@@ -54,7 +44,7 @@ const SettingsPage = ({ user, darkMode, currentDarkMode, onDarkModeToggle }) => 
   };
 
   return (
-    <div className={`page-container settings-page ${darkMode ? 'dark' : 'light'}`}>
+    <div className="page-container settings-page">
       <div className="page-header">
         <h1>⚙️ Settings</h1>
         <p>Customize your application experience</p>
@@ -185,21 +175,6 @@ const SettingsPage = ({ user, darkMode, currentDarkMode, onDarkModeToggle }) => 
           <div className="settings-card-header">
             <h2>🎨 Preferences</h2>
             <p>Customize your experience</p>
-          </div>
-          
-          <div className="setting-option">
-            <div className="setting-info">
-              <h4>Dark Mode</h4>
-              <p>Toggle dark theme for better viewing</p>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={settings.darkMode}
-                onChange={() => handleSettingChange('darkMode')}
-              />
-              <span className="slider"></span>
-            </label>
           </div>
 
           <div className="preference-option">

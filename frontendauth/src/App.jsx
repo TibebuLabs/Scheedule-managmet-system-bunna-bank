@@ -1,35 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
-
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
-
   return (
     <AuthProvider>
       <div className="App">
-        <Toaster 
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-            success: {
-              duration: 3000,
-              theme: {
-                primary: 'green',
-                secondary: 'black',
-              },
-            },
+            style: { background: '#3d1209', color: '#fff' },
+            success: { duration: 3000 },
           }}
         />
         <Routes>
@@ -37,7 +25,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Dashboard darkMode={darkMode} setDarkMode={setDarkMode} />
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/" element={<Navigate to="/login" />} />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Pages.css';
 
-const PrivacyPage = ({ user, darkMode }) => {
+const PrivacyPage = ({ user }) => {
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'public',
     showEmail: false,
@@ -40,7 +40,7 @@ const PrivacyPage = ({ user, darkMode }) => {
   };
 
   return (
-    <div className={`page-container privacy-page ${darkMode ? 'dark' : 'light'}`}>
+    <div className="page-container privacy-page">
       <div className="page-header">
         <h1>🛡️ Privacy & Data</h1>
         <p>Control your privacy and data sharing preferences</p>

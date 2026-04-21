@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Pages.css';
 
-const ProfilePage = ({ user, onUpdateProfile, darkMode }) => {
+const ProfilePage = ({ user, onUpdateProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || 'Admin User',
@@ -77,7 +77,7 @@ const ProfilePage = ({ user, onUpdateProfile, darkMode }) => {
   };
 
   return (
-    <div className={`page-container profile-page ${darkMode ? 'dark' : 'light'}`}>
+    <div className="page-container profile-page">
       <div className="page-header">
         <h1>👤 User Profile</h1>
         <p>Manage your personal information and preferences</p>

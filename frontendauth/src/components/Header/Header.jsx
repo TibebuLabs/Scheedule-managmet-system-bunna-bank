@@ -1,106 +1,61 @@
 import React, { useState } from 'react';
 import NotificationsPanel from '../Notifications/NotificationsPanel';
-import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import './Header.css';
 
-const Header = ({ 
-  darkMode, 
-  setDarkMode, 
-  notifications, 
-  markNotificationAsRead, 
-  deleteNotification,
-  searchQuery,
-  setSearchQuery,
-  onLogout,
-  onProfileClick,
-  onSettingsClick,
-  onPrivacyClick,
-  user,
-  isMobile,
-  mobileMenuOpen,
-  setMobileMenuOpen
+const Header = ({
+  notifications, markNotificationAsRead, deleteNotification,
+  searchQuery, setSearchQuery,
+  onLogout, onProfileClick, onSettingsClick, onPrivacyClick,
+  user, isMobile, mobileMenuOpen, setMobileMenuOpen
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header className={`header ${darkMode ? 'dark' : 'light'}`}>
+    <header className="header">
       <div className="header-left">
         {isMobile && (
-          <button 
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          <button className="mobile-menu-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
             <span className={`menu-icon ${mobileMenuOpen ? 'open' : ''}`}>
-              <span></span>
-              <span></span>
-              <span></span>
+              <span /><span /><span />
             </span>
           </button>
         )}
-        
         {!isMobile && (
           <div className="search-container">
             <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search"
-            />
-            <button className="search-filter" aria-label="Filter">
-              <span>⚙️</span>
-            </button>
+            <input type="text" className="search-input" placeholder="Search staff, tasks, schedules..."
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)} aria-label="Search" />
           </div>
         )}
       </div>
 
       <div className="header-right">
         {isMobile && (
-          <button className="mobile-search-toggle" aria-label="Search">
-            <span>🔍</span>
-          </button>
+          <button className="mobile-search-toggle" aria-label="Search"><span>🔍</span></button>
         )}
 
-        <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
-        
         <div className="notifications-container">
-          <button 
-            className={`notifications-button ${showNotifications ? 'active' : ''}`}
+          <button className={`notifications-button ${showNotifications ? 'active' : ''}`}
             onClick={() => setShowNotifications(!showNotifications)}
-            aria-label={`Notifications ${unreadNotifications > 0 ? `(${unreadNotifications} unread)` : ''}`}
-          >
+            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}>
             <span className="bell-icon">🔔</span>
-            {unreadNotifications > 0 && (
-              <span className="notification-badge">{unreadNotifications}</span>
-            )}
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
           </button>
-          
           {showNotifications && (
             <NotificationsPanel
               notifications={notifications}
               markNotificationAsRead={markNotificationAsRead}
               deleteNotification={deleteNotification}
               onClose={() => setShowNotifications(false)}
-              darkMode={darkMode}
             />
           )}
         </div>
 
         <div className="user-menu-container">
-          <button 
-            className="user-profile-button"
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            aria-label="User menu"
-          >
-            <div className="user-avatar">
-              <span>{user?.fullName?.charAt(0) || 'A'}</span>
-            </div>
+          <button className="user-profile-button" onClick={() => setShowUserMenu(!showUserMenu)} aria-label="User menu">
+            <div className="user-avatar"><span>{user?.fullName?.charAt(0) || 'A'}</span></div>
             {!isMobile && (
               <div className="user-details">
                 <span className="user-name">{user?.fullName || 'Admin User'}</span>
@@ -113,31 +68,25 @@ const Header = ({
           {showUserMenu && (
             <div className="user-menu-dropdown">
               <div className="user-menu-header">
-                <div className="dropdown-avatar">
-                  <span>{user?.fullName?.charAt(0) || 'A'}</span>
-                </div>
+                <div className="dropdown-avatar"><span>{user?.fullName?.charAt(0) || 'A'}</span></div>
                 <div className="dropdown-user-info">
                   <h4>{user?.fullName || 'Admin User'}</h4>
                   <p>{user?.email || 'admin@bunnabank.com'}</p>
                 </div>
               </div>
               <div className="user-menu-items">
-                <button className="menu-item" onClick={onProfileClick}>
-                  <span>👤</span>
-                  <span>Profile</span>
+                <button className="menu-item" onClick={() => { onProfileClick(); setShowUserMenu(false); }}>
+                  <span>👤</span><span>Profile</span>
                 </button>
-                <button className="menu-item" onClick={onSettingsClick}>
-                  <span>⚙️</span>
-                  <span>Settings</span>
+                <button className="menu-item" onClick={() => { onSettingsClick(); setShowUserMenu(false); }}>
+                  <span>⚙️</span><span>Settings</span>
                 </button>
-                <button className="menu-item" onClick={onPrivacyClick}>
-                  <span>🛡️</span>
-                  <span>Privacy</span>
+                <button className="menu-item" onClick={() => { onPrivacyClick(); setShowUserMenu(false); }}>
+                  <span>🛡️</span><span>Privacy</span>
                 </button>
                 <div className="menu-divider" />
                 <button className="menu-item logout" onClick={onLogout}>
-                  <span>🚪</span>
-                  <span>Logout</span>
+                  <span>🚪</span><span>Logout</span>
                 </button>
               </div>
             </div>

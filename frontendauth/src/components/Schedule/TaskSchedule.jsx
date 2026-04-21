@@ -4,7 +4,7 @@ import './TaskSchedule.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const TaskSchedule = ({ darkMode, onClose }) => {
+const TaskSchedule = ({ onClose }) => {
   const [formData, setFormData] = useState({
     scheduleType: 'daily',
     selectedStaff: [],

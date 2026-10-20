@@ -47,8 +47,10 @@ export const AuthProvider = ({ children }) => {
       toast.success('Registration successful! Welcome aboard! 🎉');
       return { ...response, user: normalizedUser };
     } catch (error) {
-      toast.error(error.message || 'Registration failed');
-      throw error;
+      // Don't show toast here - API interceptor already handled it
+      // Just pass error message if available
+      const errorMessage = error.message || 'Registration failed';
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -67,8 +69,9 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back, ${normalizedUser.firstName}! 👋`);
       return { ...response, user: normalizedUser };
     } catch (error) {
-      toast.error(error.message || 'Login failed');
-      throw error;
+      // Don't show toast here - API interceptor already handled it
+      const errorMessage = error.message || 'Login failed';
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

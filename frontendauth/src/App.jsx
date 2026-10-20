@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
@@ -10,28 +11,30 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="App">
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: { background: '#3d1209', color: '#fff' },
-            success: { duration: 3000 },
-          }}
-        />
-        <Routes>
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/" element={<Navigate to="/login" />} />
-        </Routes>
-      </div>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <div className="App">
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: { background: '#3d1209', color: '#fff' },
+              success: { duration: 3000 },
+            }}
+          />
+          <Routes>
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

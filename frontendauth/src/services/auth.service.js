@@ -1,13 +1,4 @@
-import axios from 'axios';
-
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth`;
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import api from './api';
 
 // Helper function to normalize user object
 const normalizeUser = (user) => {
@@ -19,31 +10,13 @@ const normalizeUser = (user) => {
   };
 };
 
-// Add token to requests if it exists
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 const authService = {
  async register(userData) {
     try {
-      console.log('📤 Sending registration data to API:', JSON.stringify(userData, null, 2));
-      
-      const response = await api.post('/register', userData);
-      
-      console.log('✅ Registration successful:', response.data);
+      const response = await api.post('/auth/register', userData);
       
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        api.setAuthToken(response.data.token);
         
         // Normalize user data before storing
         const normalizedUser = normalizeUser(response.data.user);
@@ -56,34 +29,18 @@ const authService = {
       }
       return response.data;
     } catch (error) {
-      console.error('❌ Registration API error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      
-      const errorData = error.response?.data || { 
-        message: 'Registration failed. Please try again.' 
-      };
-      
-      // Handle specific error cases
-      if (error.response?.status === 400) {
-        if (errorData.field === 'email') {
-          errorData.message = 'Email already exists. Please use a different email.';
-        } else if (errorData.message === 'All fields are required') {
-          errorData.message = 'Please fill in all required fields correctly.';
-        }
-      }
-      
-      throw errorData;
+      // Error is already handled by API interceptor
+      // Just re-throw for component-level handling
+      throw error;
     }
   },
 
   async login(credentials) {
     try {
-      const response = await api.post('/login', credentials);
+      const response = await api.post('/auth/login', credentials);
+      
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        api.setAuthToken(response.data.token);
         
         // Normalize user data before storing
         const normalizedUser = normalizeUser(response.data.user);
@@ -96,30 +53,23 @@ const authService = {
       }
       return response.data;
     } catch (error) {
-      const errorData = error.response?.data || { message: 'Login failed' };
-      
-      // Handle specific error cases
-      if (error.response?.status === 401) {
-        errorData.message = 'Invalid email or password. Please try again.';
-      }
-      
-      throw errorData;
+      // Error is already handled by API interceptor
+      throw error;
     }
   },
 
   async getProfile() {
     try {
-      const response = await api.get('/profile');
+      const response = await api.get('/auth/profile');
       const normalizedUser = normalizeUser(response.data.user);
       return { user: normalizedUser };
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch profile' };
+      throw error;
     }
   },
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    api.clearAuth();
   },
 
   getCurrentUser() {

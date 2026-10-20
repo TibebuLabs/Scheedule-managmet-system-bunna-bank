@@ -1,10 +1,19 @@
 const User = require('../models/User.model');
 const jwt = require('jsonwebtoken');
 
+// Check JWT_SECRET on startup
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.log('🔐 WARNING: JWT_SECRET is too short or using default value');
+  console.log('   For security, use a strong random string (minimum 32 characters)');
+  console.log('   Generate one at: https://generate-random.org/api-key-generator');
+}
+
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'your-secret-key', {
-    expiresIn: process.env.JWT_EXPIRE || '7d'
-  });
+  const expiresIn = process.env.JWT_EXPIRE || '7d';
+  return {
+    token: jwt.sign({ id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn }),
+    expiresIn
+  };
 };
 
 const register = async (req, res) => {
@@ -45,12 +54,13 @@ const register = async (req, res) => {
     console.log('✅ User created:', user.email);
     
     // Generate token
-    const token = generateToken(user._id);
+    const tokenData = generateToken(user._id);
     
     res.status(201).json({
       success: true,
       message: 'Registration successful! 🎉',
-      token,
+      token: tokenData.token,
+      expiresIn: tokenData.expiresIn,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -70,6 +80,7 @@ const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `${field} already exists`,
+        code: 'DUPLICATE_FIELD',
         field: field
       });
     }
@@ -84,13 +95,15 @@ const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Validation error',
+        code: 'VALIDATION_ERROR',
         errors: errors
       });
     }
     
     res.status(500).json({
       success: false,
-      message: 'Registration failed. Please try again.'
+      message: 'Registration failed. Please try again.',
+      code: 'REGISTRATION_ERROR'
     });
   }
 };
@@ -104,7 +117,8 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password'
+        message: 'Please provide email and password',
+        code: 'MISSING_CREDENTIALS'
       });
     }
     
@@ -115,7 +129,8 @@ const login = async (req, res) => {
       console.log('❌ User not found:', email);
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
+        code: 'INVALID_CREDENTIALS'
       });
     }
     
@@ -123,7 +138,8 @@ const login = async (req, res) => {
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
-        message: 'Account is deactivated. Please contact administrator.'
+        message: 'Account is deactivated. Please contact administrator.',
+        code: 'ACCOUNT_DEACTIVATED'
       });
     }
     
@@ -134,7 +150,8 @@ const login = async (req, res) => {
       console.log('❌ Invalid password for:', email);
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email or password',
+        code: 'INVALID_CREDENTIALS'
       });
     }
     
@@ -143,14 +160,15 @@ const login = async (req, res) => {
     await user.save({ validateBeforeSave: false });
     
     // Generate token
-    const token = generateToken(user._id);
+    const tokenData = generateToken(user._id);
     
     console.log('✅ Login successful:', email);
     
     res.status(200).json({
       success: true,
       message: 'Login successful! ✅',
-      token,
+      token: tokenData.token,
+      expiresIn: tokenData.expiresIn,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -165,7 +183,8 @@ const login = async (req, res) => {
     console.error('🔥 Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Login failed. Please try again.'
+      message: 'Login failed. Please try again.',
+      code: 'LOGIN_ERROR'
     });
   }
 };

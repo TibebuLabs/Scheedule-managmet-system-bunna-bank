@@ -6,13 +6,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'First name is required'],
     trim: true,
-    minlength: [2, 'First name must be at least 2 characters']
+    minlength: [2, 'First name must be at least 2 characters'],
+    maxlength: [50, 'First name must not exceed 50 characters']
   },
   lastName: {
     type: String,
     required: [true, 'Last name is required'],
     trim: true,
-    minlength: [2, 'Last name must be at least 2 characters']
+    minlength: [2, 'Last name must be at least 2 characters'],
+    maxlength: [50, 'Last name must not exceed 50 characters']
   },
   email: {
     type: String,
@@ -20,12 +22,15 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
+    index: true, // Add index for faster queries
     match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
   },
   phone: {
     type: String,
     required: [true, 'Phone number is required'],
-    trim: true
+    trim: true,
+    minlength: [10, 'Phone number must be at least 10 digits'],
+    maxlength: [15, 'Phone number must not exceed 15 digits']
   },
   password: {
     type: String,
@@ -42,11 +47,15 @@ const userSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true
+    default: true,
+    index: true // Add index for filtering active users
   }
 }, {
   timestamps: true
 });
+
+// Compound index for common queries
+userSchema.index({ email: 1, isActive: 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {

@@ -13,7 +13,8 @@ const protect = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: 'Not authorized to access this route',
+        code: 'NO_TOKEN'
       });
     }
     
@@ -27,22 +28,51 @@ const protect = async (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({
           success: false,
-          message: 'User not found'
+          message: 'User not found',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+      
+      if (!req.user.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: 'Account is deactivated',
+          code: 'ACCOUNT_DEACTIVATED'
         });
       }
       
       next();
     } catch (error) {
+      // Handle specific JWT errors
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Token has expired. Please login again',
+          code: 'TOKEN_EXPIRED',
+          expiredAt: error.expiredAt
+        });
+      }
+      
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token',
+          code: 'INVALID_TOKEN'
+        });
+      }
+      
       return res.status(401).json({
         success: false,
-        message: 'Invalid token'
+        message: 'Not authorized',
+        code: 'AUTH_FAILED'
       });
     }
   } catch (error) {
     console.error('🔥 Auth middleware error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error in authentication'
+      message: 'Server error in authentication',
+      code: 'AUTH_SERVER_ERROR'
     });
   }
 };

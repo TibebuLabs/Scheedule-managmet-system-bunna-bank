@@ -11,8 +11,10 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
     open: true,
+    allowedHosts: true, // Allows access from any domain host on Render
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -20,6 +22,11 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true, // Allows access from any domain host during npm run preview
   },
   build: {
     outDir: 'dist',

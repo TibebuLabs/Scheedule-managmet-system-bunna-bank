@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, getProfile } = require('../controllers/auth.controller');
-const { protect, validateRegistration } = require('../middleware/auth.middleware');
+const { protect } = require('../middleware/auth.middleware');
+const { registerSchema, loginSchema, validate } = require('../validators/auth.validator');
 
 // Health check
 router.get('/health', (req, res) => {
@@ -16,11 +17,11 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Register route
-router.post('/register', validateRegistration, register);
+// Register route with Joi validation
+router.post('/register', validate(registerSchema), register);
 
-// Login route
-router.post('/login', login);
+// Login route with Joi validation
+router.post('/login', validate(loginSchema), login);
 
 // Profile route (protected)
 router.get('/profile', protect, getProfile);

@@ -3,22 +3,34 @@ const { format, addDays } = require('date-fns');
 
 class EmailService {
   constructor() {
-    // 🔥 FIXED: Use service:'gmail' instead of host/port - This is the KEY FIX
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      tls: {
-        rejectUnauthorized: false
-      },
-      debug: process.env.NODE_ENV === 'development',
-      logger: true
-    });
+    // Check if email credentials are configured
+    this.isEmailEnabled = !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+    
+    if (!this.isEmailEnabled) {
+      console.log('⚠️  Email service disabled: Credentials not configured');
+      console.log('   Set EMAIL_USER and EMAIL_PASSWORD in .env to enable email features');
+      this.transporter = null;
+    } else {
+      // 🔥 FIXED: Use service:'gmail' instead of host/port - This is the KEY FIX
+      this.transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
+        tls: {
+          rejectUnauthorized: false
+        },
+        debug: process.env.NODE_ENV === 'development',
+        logger: true
+      });
+      
+      // Verify connection on initialization
+      this.verifyConnection();
+    }
 
     // Stats tracking
     this.stats = {
@@ -26,30 +38,52 @@ class EmailService {
       emailsFailed: 0,
       lastSent: null
     };
-
-    // Verify connection on initialization
-    this.verifyConnection();
+  }
+  
+  // Get email service status
+  getEmailStatus() {
+    return {
+      enabled: this.isEmailEnabled,
+      configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
+      stats: this.stats
+    };
   }
 
   // 🔧 Verify email connection
   async verifyConnection() {
+    if (!this.isEmailEnabled) {
+      return false;
+    }
+    
     try {
       await this.transporter.verify();
       console.log('✅ Email server is ready to send messages');
       console.log(`📧 Using: service='gmail', user=${process.env.EMAIL_USER}`);
       return true;
     } catch (error) {
-      console.error('❌ Email server connection failed:', error.message);
-      console.log('🔧 Try these fixes:');
+      console.log('⚠️  Email server connection failed:', error.message);
+      console.log('🔧 Email service will continue in degraded mode');
+      console.log('   Tips for fixing:');
       console.log('   1. Use a Google App Password (not regular password)');
       console.log('   2. Enable 2FA on your Google account');
       console.log('   3. Check if port 587/465 is blocked by firewall');
+      this.isEmailEnabled = false; // Disable if connection fails
       return false;
     }
   }
 
   // 🚀 Send single email - WITH RETRY LOGIC
   async sendEmail(to, subject, html, options = {}, retryCount = 0) {
+    if (!this.isEmailEnabled) {
+      console.log('⚠️  Email service disabled - cannot send email');
+      return {
+        success: false,
+        error: 'Email service is not configured',
+        code: 'EMAIL_DISABLED',
+        failedAt: new Date()
+      };
+    }
+    
     try {
       const mailOptions = {
         from: `"Task Management System" <${process.env.EMAIL_USER}>`,

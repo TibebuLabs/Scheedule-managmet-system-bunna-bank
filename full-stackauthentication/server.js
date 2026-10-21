@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -24,8 +24,8 @@ const DB_RETRY_INTERVAL = 10000; // 10 seconds
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // Limit each IP to 10 requests per windowMs for auth
-  message: { 
-    success: false, 
+  message: {
+    success: false,
     message: 'Too many authentication attempts, please try again later.',
     code: 'RATE_LIMIT_EXCEEDED'
   }
@@ -35,8 +35,8 @@ const authLimiter = rateLimit({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
-  message: { 
-    success: false, 
+  message: {
+    success: false,
     message: 'Too many requests, please try again later.',
     code: 'RATE_LIMIT_EXCEEDED'
   }
@@ -71,17 +71,19 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
 
     // Allow any onrender.com origin matching the project
-    if (/https:\/\/scheedule-managmet-system-bunna-bank(-\d+)?\.onrender\.com$/.test(origin)) {
+    if (/^https:\/\/scheedule-managmet-system-bunna-bank(-\d+)?\.onrender\.com$/.test(origin)) {
       return callback(null, true);
     }
 
-    console.log(⚠️ CORS blocked request from origin: );
+    console.log('⚠️ CORS blocked request from origin:', origin);
     callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-}));app.use(express.json());
+}));
+
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(mongoSanitize()); // Temporarily disabled - install with: npm install express-mongo-sanitize
 app.use(limiter);
@@ -90,37 +92,35 @@ app.use(limiter);
 async function connectDatabase() {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/task_scheduler', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    console.log('âœ… MongoDB connected successfully');
+    console.log('✅ MongoDB connected successfully');
     dbRetryCount = 0; // Reset retry count on successful connection
   } catch (err) {
-    console.error('âŒ MongoDB connection error:', err.message);
-    
+    console.error('❌ MongoDB connection error:', err.message);
+
     if (err.message.includes('ECONNREFUSED')) {
-      console.log('âš ï¸  MongoDB server is not running or not accessible');
-      console.log('ðŸ”§ Please ensure MongoDB is installed and running:');
+      console.log('⚠️  MongoDB server is not running or not accessible');
+      console.log('🔧 Please ensure MongoDB is installed and running:');
       console.log('   - Windows: Run "mongod" or start MongoDB service');
       console.log('   - Linux/Mac: Run "sudo systemctl start mongod" or "brew services start mongodb"');
-      
+
       // Retry logic for development
       if (process.env.NODE_ENV !== 'production' && dbRetryCount < MAX_DB_RETRIES) {
         dbRetryCount++;
-        console.log(`ðŸ”„ Retrying database connection (attempt ${dbRetryCount}/${MAX_DB_RETRIES}) in ${DB_RETRY_INTERVAL / 1000}s...`);
+        console.log(`🔄 Retrying database connection (attempt ${dbRetryCount}/${MAX_DB_RETRIES}) in ${DB_RETRY_INTERVAL / 1000}s...`);
         setTimeout(connectDatabase, DB_RETRY_INTERVAL);
       } else if (dbRetryCount >= MAX_DB_RETRIES) {
-        console.log('âŒ Maximum retry attempts reached. Server will continue without database.');
-        console.log('âš ï¸  Some features will be unavailable until database connection is established.');
+        console.log('❌ Maximum retry attempts reached. Server will continue without database.');
+        console.log('⚠️  Some features will be unavailable until database connection is established.');
       }
     }
-    
+
     // Don't exit in development or serverless environments
     if (process.env.NODE_ENV === 'production') {
-      // In production, we might want to exit and let process manager restart
-      // Uncomment the line below if you want process to exit
+      // In production, you might want to exit and let a process manager restart the app.
+      // Uncomment the line below if you want the process to exit:
       // process.exit(1);
     }
   }
@@ -131,19 +131,19 @@ connectDatabase();
 
 // Connection events
 mongoose.connection.on('connected', () => {
-  console.log('ðŸ“Š MongoDB connected');
-  dbRetryCount = 0; // Reset retry count
+  console.log('📊 MongoDB connected');
+  dbRetryCount = 0;
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('âŒ MongoDB connection error:', err.message);
+  console.error('❌ MongoDB connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('âš ï¸ MongoDB disconnected');
+  console.log('⚠️ MongoDB disconnected');
   // Attempt reconnection in development
   if (process.env.NODE_ENV !== 'production' && dbRetryCount < MAX_DB_RETRIES) {
-    console.log('ðŸ”„ Attempting to reconnect to MongoDB...');
+    console.log('🔄 Attempting to reconnect to MongoDB...');
     setTimeout(connectDatabase, DB_RETRY_INTERVAL);
   }
 });
@@ -152,13 +152,13 @@ mongoose.connection.on('disconnected', () => {
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
   const startTime = Date.now();
-  
+
   // Log response when finished
   res.on('finish', () => {
     const duration = Date.now() - startTime;
     console.log(`[${timestamp}] ${req.method} ${req.url} ${res.statusCode} ${duration}ms`);
   });
-  
+
   next();
 });
 
@@ -174,9 +174,9 @@ app.use('/api/email', emailRoutes);
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   const emailStatus = (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) ? 'configured' : 'not configured';
-  
-  res.status(200).json({ 
-    status: 'OK', 
+
+  res.status(200).json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     database: dbStatus,
     email: emailStatus,
@@ -209,7 +209,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`,
@@ -220,14 +220,14 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   // Log error details
-  console.error('ðŸ”¥ Server Error:', {
+  console.error('🔥 Server Error:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,
     method: req.method,
     timestamp: new Date().toISOString()
   });
-  
+
   // Handle specific error types
   if (err.name === 'ValidationError') {
     return res.status(400).json({
@@ -238,7 +238,7 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   if (err.name === 'CastError') {
     return res.status(400).json({
       success: false,
@@ -247,7 +247,7 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   if (err.code === 11000) {
     return res.status(409).json({
       success: false,
@@ -256,85 +256,85 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   // Default error response
   const statusCode = err.statusCode || err.status || 500;
-  const message = process.env.NODE_ENV === 'production' 
-    ? 'Internal server error' 
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Internal server error'
     : err.message;
-  
+
   res.status(statusCode).json({
     success: false,
     message: message,
     code: err.code || 'SERVER_ERROR',
     timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       error: err.message,
-      stack: err.stack 
+      stack: err.stack
     })
   });
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('ðŸ’¥ Uncaught Exception:', err);
+  console.error('💥 Uncaught Exception:', err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('ðŸ’¥ Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 // Start server
 const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
-  console.log('ðŸš€ Task Management System - Server Started');
+  console.log('🚀 Task Management System - Server Started');
   console.log('='.repeat(60));
-  console.log(`ðŸ“ Port: ${PORT}`);
-  console.log(`ðŸŒ Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`ðŸ”— Health check: http://localhost:${PORT}/health`);
-  console.log(`ðŸ“Š Database: ${mongoose.connection.readyState === 1 ? 'âœ… Connected' : 'âš ï¸  Disconnected'}`);
-  console.log(`ðŸ“§ Email: ${(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) ? 'âœ… Configured' : 'âš ï¸  Not configured'}`);
-  console.log('\nðŸ“¡ Available Routes:');
-  console.log(`   - Auth:      /api/auth`);
-  console.log(`   - Staff:     /api/staff`);
-  console.log(`   - Tasks:     /api/tasks`);
-  console.log(`   - Schedules: /api/schedules`);
-  console.log(`   - Email:     /api/email`);
+  console.log(`📍 Port: ${PORT}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '⚠️  Disconnected'}`);
+  console.log(`📧 Email: ${(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) ? '✅ Configured' : '⚠️  Not configured'}`);
+  console.log('\n📡 Available Routes:');
+  console.log('   - Auth:      /api/auth');
+  console.log('   - Staff:     /api/staff');
+  console.log('   - Tasks:     /api/tasks');
+  console.log('   - Schedules: /api/schedules');
+  console.log('   - Email:     /api/email');
   console.log('='.repeat(60) + '\n');
-  
+
   // Warnings
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.log('âš ï¸  WARNING: Email credentials not configured. Email features will be unavailable.');
+    console.log('⚠️  WARNING: Email credentials not configured. Email features will be unavailable.');
     console.log('   Set EMAIL_USER and EMAIL_PASSWORD in .env file\n');
   }
-  
+
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-secret-key') {
-    console.log('ðŸ” WARNING: Using default/weak JWT_SECRET. Change this in production!');
+    console.log('🔐 WARNING: Using default/weak JWT_SECRET. Change this in production!');
     console.log('   Set a strong JWT_SECRET in .env file (minimum 32 characters)\n');
   }
 });
 
 // Graceful shutdown
 const gracefulShutdown = () => {
-  console.log('\nðŸ›‘ Received shutdown signal');
-  
+  console.log('\n🛑 Received shutdown signal');
+
   server.close(async () => {
-    console.log('ðŸ”’ HTTP server closed');
-    
+    console.log('🔒 HTTP server closed');
+
     try {
       await mongoose.connection.close();
-      console.log('ðŸ“Š MongoDB connection closed');
+      console.log('📊 MongoDB connection closed');
       process.exit(0);
     } catch (err) {
-      console.error('âŒ Error during shutdown:', err);
+      console.error('❌ Error during shutdown:', err);
       process.exit(1);
     }
   });
 
   // Force shutdown after 10 seconds
   setTimeout(() => {
-    console.error('â° Forcing shutdown after timeout');
+    console.error('⏰ Forcing shutdown after timeout');
     process.exit(1);
   }, 10000);
 };

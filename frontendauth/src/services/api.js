@@ -9,8 +9,19 @@ import toast from 'react-hot-toast';
  * - Request/response logging
  */
 
-// Get base URL from environment or use default
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Resolve base URL from environment, or auto-fallback to Render backend if running on deployed web
+export const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // When running on Render or any remote domain (not localhost)
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://scheedule-managmet-system-bunna-bank.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
+export const BASE_URL = getBaseURL();
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -18,7 +29,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15 seconds timeout
+  timeout: 60000, // 60s timeout to accommodate Render free-tier cold starts
 });
 
 /**

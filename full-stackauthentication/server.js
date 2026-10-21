@@ -75,7 +75,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    console.log(⚠️ CORS blocked request from origin: );
+    console.log('⚠️ CORS blocked ,request from origin: ', origin);
     callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

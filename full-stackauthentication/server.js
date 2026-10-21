@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -47,30 +47,41 @@ app.use(helmet({
   contentSecurityPolicy: false // Disable CSP for development
 }));
 
+// Support multiple FRONTEND_URL values (comma-separated or single)
+const rawFrontendUrls = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(u => u.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:3000',
-  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'https://scheedule-managmet-system-bunna-bank-1.onrender.com',
+  ...rawFrontendUrls,
 ].filter(Boolean);
 
-// Log CORS configuration warning if not properly set
-if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
-  console.log('⚠️ WARNING: FRONTEND_URL not set in production environment');
-}
+console.log('🔒 CORS allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
+    // Allow non-browser requests (Postman, curl, server-to-server)
     if (!origin) return callback(null, true);
+
+    // Allow exact matches from allowedOrigins
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    
-    // Log blocked CORS attempts for security monitoring
-    console.log(`⚠️ CORS blocked request from origin: ${origin}`);
-    callback(new Error(`CORS: origin ${origin} not allowed`));
+
+    // Allow any onrender.com origin matching the project
+    if (/https:\/\/scheedule-managmet-system-bunna-bank(-\d+)?\.onrender\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    console.log(⚠️ CORS blocked request from origin: );
+    callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-}));
-app.use(express.json());
+}));app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(mongoSanitize()); // Temporarily disabled - install with: npm install express-mongo-sanitize
 app.use(limiter);
@@ -84,25 +95,25 @@ async function connectDatabase() {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    console.log('✅ MongoDB connected successfully');
+    console.log('âœ… MongoDB connected successfully');
     dbRetryCount = 0; // Reset retry count on successful connection
   } catch (err) {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error('âŒ MongoDB connection error:', err.message);
     
     if (err.message.includes('ECONNREFUSED')) {
-      console.log('⚠️  MongoDB server is not running or not accessible');
-      console.log('🔧 Please ensure MongoDB is installed and running:');
+      console.log('âš ï¸  MongoDB server is not running or not accessible');
+      console.log('ðŸ”§ Please ensure MongoDB is installed and running:');
       console.log('   - Windows: Run "mongod" or start MongoDB service');
       console.log('   - Linux/Mac: Run "sudo systemctl start mongod" or "brew services start mongodb"');
       
       // Retry logic for development
       if (process.env.NODE_ENV !== 'production' && dbRetryCount < MAX_DB_RETRIES) {
         dbRetryCount++;
-        console.log(`🔄 Retrying database connection (attempt ${dbRetryCount}/${MAX_DB_RETRIES}) in ${DB_RETRY_INTERVAL / 1000}s...`);
+        console.log(`ðŸ”„ Retrying database connection (attempt ${dbRetryCount}/${MAX_DB_RETRIES}) in ${DB_RETRY_INTERVAL / 1000}s...`);
         setTimeout(connectDatabase, DB_RETRY_INTERVAL);
       } else if (dbRetryCount >= MAX_DB_RETRIES) {
-        console.log('❌ Maximum retry attempts reached. Server will continue without database.');
-        console.log('⚠️  Some features will be unavailable until database connection is established.');
+        console.log('âŒ Maximum retry attempts reached. Server will continue without database.');
+        console.log('âš ï¸  Some features will be unavailable until database connection is established.');
       }
     }
     
@@ -120,19 +131,19 @@ connectDatabase();
 
 // Connection events
 mongoose.connection.on('connected', () => {
-  console.log('📊 MongoDB connected');
+  console.log('ðŸ“Š MongoDB connected');
   dbRetryCount = 0; // Reset retry count
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB connection error:', err.message);
+  console.error('âŒ MongoDB connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected');
+  console.log('âš ï¸ MongoDB disconnected');
   // Attempt reconnection in development
   if (process.env.NODE_ENV !== 'production' && dbRetryCount < MAX_DB_RETRIES) {
-    console.log('🔄 Attempting to reconnect to MongoDB...');
+    console.log('ðŸ”„ Attempting to reconnect to MongoDB...');
     setTimeout(connectDatabase, DB_RETRY_INTERVAL);
   }
 });
@@ -209,7 +220,7 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   // Log error details
-  console.error('🔥 Server Error:', {
+  console.error('ðŸ”¥ Server Error:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.url,
@@ -266,25 +277,25 @@ app.use((err, req, res, next) => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('💥 Uncaught Exception:', err);
+  console.error('ðŸ’¥ Uncaught Exception:', err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('ðŸ’¥ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 // Start server
 const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
-  console.log('🚀 Task Management System - Server Started');
+  console.log('ðŸš€ Task Management System - Server Started');
   console.log('='.repeat(60));
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`📊 Database: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '⚠️  Disconnected'}`);
-  console.log(`📧 Email: ${(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) ? '✅ Configured' : '⚠️  Not configured'}`);
-  console.log('\n📡 Available Routes:');
+  console.log(`ðŸ“ Port: ${PORT}`);
+  console.log(`ðŸŒ Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`ðŸ”— Health check: http://localhost:${PORT}/health`);
+  console.log(`ðŸ“Š Database: ${mongoose.connection.readyState === 1 ? 'âœ… Connected' : 'âš ï¸  Disconnected'}`);
+  console.log(`ðŸ“§ Email: ${(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) ? 'âœ… Configured' : 'âš ï¸  Not configured'}`);
+  console.log('\nðŸ“¡ Available Routes:');
   console.log(`   - Auth:      /api/auth`);
   console.log(`   - Staff:     /api/staff`);
   console.log(`   - Tasks:     /api/tasks`);
@@ -294,36 +305,36 @@ const server = app.listen(PORT, () => {
   
   // Warnings
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.log('⚠️  WARNING: Email credentials not configured. Email features will be unavailable.');
+    console.log('âš ï¸  WARNING: Email credentials not configured. Email features will be unavailable.');
     console.log('   Set EMAIL_USER and EMAIL_PASSWORD in .env file\n');
   }
   
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-secret-key') {
-    console.log('🔐 WARNING: Using default/weak JWT_SECRET. Change this in production!');
+    console.log('ðŸ” WARNING: Using default/weak JWT_SECRET. Change this in production!');
     console.log('   Set a strong JWT_SECRET in .env file (minimum 32 characters)\n');
   }
 });
 
 // Graceful shutdown
 const gracefulShutdown = () => {
-  console.log('\n🛑 Received shutdown signal');
+  console.log('\nðŸ›‘ Received shutdown signal');
   
   server.close(async () => {
-    console.log('🔒 HTTP server closed');
+    console.log('ðŸ”’ HTTP server closed');
     
     try {
       await mongoose.connection.close();
-      console.log('📊 MongoDB connection closed');
+      console.log('ðŸ“Š MongoDB connection closed');
       process.exit(0);
     } catch (err) {
-      console.error('❌ Error during shutdown:', err);
+      console.error('âŒ Error during shutdown:', err);
       process.exit(1);
     }
   });
 
   // Force shutdown after 10 seconds
   setTimeout(() => {
-    console.error('⏰ Forcing shutdown after timeout');
+    console.error('â° Forcing shutdown after timeout');
     process.exit(1);
   }, 10000);
 };

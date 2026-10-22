@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Clipboard, Trash2, AlertTriangle, Calendar, RotateCcw, Eye, Edit, Clock, CheckCircle2, X, Search } from 'lucide-react';
+import { Clipboard, Trash2, AlertTriangle, Calendar, RotateCcw, Eye, Edit, Clock, CheckCircle2, X, Search, Check } from 'lucide-react';
 import './TaskTable.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -126,7 +126,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/tasks`);
       
-      console.log('📥 Tasks API Response:', response.data);
+      console.log('Tasks API Response:', response.data);
       
       if (response.data.success) {
         // Transform backend data to match frontend structure
@@ -140,13 +140,13 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
           updatedAt: task.updatedAt
         }));
         
-        console.log('✅ Transformed tasks:', transformedTasks);
+        console.log('Transformed tasks:', transformedTasks);
         setTasks(transformedTasks);
       }
     } catch (error) {
-      console.error('❌ Error fetching tasks:', error);
+      console.error('Error fetching tasks:', error);
       if (error.code === 'ERR_NETWORK') {
-        console.log('⚠️ Using sample data for development');
+        console.log('Using sample data for development');
         setTasks([
           {
             id: '1',
@@ -208,7 +208,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         status: editFormData.status || 'pending'
       };
 
-      console.log('📤 Updating task:', taskId, updateData);
+      console.log('Updating task:', taskId, updateData);
       const response = await axios.put(`${API_BASE_URL}/tasks/${taskId}`, updateData);
       
       if (response.data.success) {
@@ -227,13 +227,13 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         
         const updatedTask = tasks.find(t => t.id === taskId);
         showSuccessMessage(
-          'Task Updated! 🎉',
+          'Task Updated!',
           'Your task has been successfully updated.',
           { ...updatedTask, ...updateData }
         );
       }
     } catch (error) {
-      console.error('❌ Error updating task:', error);
+      console.error('Error updating task:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have been deleted.');
         fetchTasks();
@@ -281,7 +281,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         );
       }
     } catch (error) {
-      console.error('❌ Error deleting task:', error);
+      console.error('Error deleting task:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have already been deleted.');
         fetchTasks();
@@ -309,7 +309,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         status: newStatus
       };
 
-      console.log('📤 Updating task status:', taskId, newStatus);
+      console.log('Updating task status:', taskId, newStatus);
       const response = await axios.put(`${API_BASE_URL}/tasks/${taskId}`, updateData);
       
       if (response.data.success) {
@@ -329,7 +329,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         );
       }
     } catch (error) {
-      console.error('❌ Error updating task status:', error);
+      console.error('Error updating task status:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have been deleted.');
         fetchTasks();
@@ -693,7 +693,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
           />
           {searchQuery && (
             <button className="clear-search" onClick={() => setSearchQuery('')}>
-              ✕
+              <X size={18} strokeWidth={2} />
             </button>
           )}
         </div>
@@ -839,7 +839,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Mark as Completed"
                               disabled={task.status === 'completed'}
                             >
-                              ✓
+                              <Check size={16} strokeWidth={2} />
                             </button>
                             <button
                               className="quick-status-btn cancelled"
@@ -847,7 +847,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Mark as Cancelled"
                               disabled={task.status === 'cancelled'}
                             >
-                              ✕
+                              <X size={16} strokeWidth={2} />
                             </button>
                           </div>
                         </div>

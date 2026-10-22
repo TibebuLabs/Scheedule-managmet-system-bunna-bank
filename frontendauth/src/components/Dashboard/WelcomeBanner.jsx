@@ -1,4 +1,5 @@
 import React from 'react';
+import { Smile } from 'lucide-react';
 import './WelcomeBanner.css';
 
 const WelcomeBanner = () => {
@@ -12,7 +13,7 @@ const WelcomeBanner = () => {
     <div className="welcome-banner animate-in">
       <div className="welcome-content">
         <div className="welcome-text">
-          <h1>{greeting}, Admin! 👋</h1>
+          <h1 style={{display:'inline-flex',alignItems:'center',gap:'8px'}}>{greeting}, Admin! <Smile size={22} className="welcome-icon" /></h1>
           <p>Here's what's happening with your team today.</p>
         </div>
         <div className="welcome-stats">

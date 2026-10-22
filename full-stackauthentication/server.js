@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-// const mongoSanitize = require('express-mongo-sanitize'); // Temporarily disabled - need to run: npm install
+const mongoSanitize = require('express-mongo-sanitize');
 const authRoutes = require('./routes/auth.routes');
 const staffRoutes = require('./routes/staff.routes');
 const taskRoutes = require('./routes/task.routes');
@@ -85,7 +85,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(mongoSanitize()); // Temporarily disabled - install with: npm install express-mongo-sanitize
+app.use(mongoSanitize());
 app.use(limiter);
 
 // Database connection with retry logic

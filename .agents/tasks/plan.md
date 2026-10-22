@@ -1,365 +1,356 @@
-# Implementation Plan: Bunna Bank Schedule Management System — Error Handling & Production Readiness
+# Implementation Plan - Bunna Bank Schedule Management System
 
-## Current State Summary
+## Priority 1: CRITICAL BUG FIXES
 
-### Existing Issues
-1. **Inconsistent error responses**: Controllers return different error shapes, some expose stack traces
-2. **Missing validators on some routes**: staff.routes.js uses express-validator while task.routes.js uses Joi; inconsistent validation patterns
-3. **Validation errors poorly formatted for frontend**: Backend returns raw validation arrays without field mapping
-4. **No centralized error handling middleware**: Express error handler exists but isn't used consistently
-5. **Frontend has incomplete error mapping**: API interceptor handles some status codes but not field-level validation errors
-6. **No user-friendly error messages**: Technical errors leak to the frontend; no enum of error codes
-7. **Missing 404/500 pages**: Frontend has no fallback for unhandled routing or server errors
-8. **Email service errors not clear to users**: Errors logged but not propagated properly
-9. **express-mongo-sanitize disabled**: Security vulnerability (SQL injection-like attacks on MongoDB); middleware commented out
-10. **No .env.example file**: New developers can't see required environment variables
+### 1. Fix Email Service Configuration with Correct App Password
+**What**: Update `.env` file with the correct Gmail app password (`rpyv scgu clrd fgru`) and fix email transporter configuration.
+**Files**: `full-stackauthentication/.env`, `full-stackauthentication/services/email.service.js`
+**Changes**:
+- In `.env`: Change `EMAIL_PASSWORD=fwkwhaiepgwadzdr` to `EMAIL_PASSWORD=rpyv scgu clrd fgru`
+- In `email.service.js`: Verify the transporter is using `service: 'gmail'` with proper error handling for failed verification
+**Verify**: `GET http://localhost:5000/api/email/check` should return `{ success: true, connected: true }` with no "Email service is not configured" errors
 
-### Existing Good Patterns
-- Joi validation in auth.validator.js and task.validator.js with custom messages
-- ErrorBoundary component in React (but not fully integrated or styled)
-- Basic API interceptor structure in api.js
-- React Hot Toast for notifications
-- Structured logging in server.js (timestamps, formatted output)
-
----
-
-## Backend Changes (Ordered by Dependency)
-
-### 1. Create Centralized Error Code Enum
-**What**: Build `utils/errorCodes.js` defining all error codes and their HTTP status + user messages.
-**Why**: Single source of truth for error categorization across all endpoints; enables frontend to map errors consistently.
-**Files**: `full-stackauthentication/utils/errorCodes.js`
-**Verify**: Run `node -c utils/errorCodes.js` and confirm no syntax errors; file exports an object with at least 20 error codes (AUTH_*, VALIDATION_*, DB_*, GENERAL_*).
-
----
-
-### 2. Create Custom AppError Class
-**What**: Build `utils/AppError.js` extending Error class with statusCode, code, and isOperational properties.
-**Why**: Standardizes how errors are created and thrown; enables centralized handler to distinguish operational vs programming errors.
-**Files**: `full-stackauthentication/utils/AppError.js`
-**Verify**: Create a test instance: `const err = new AppError('Test', 400, 'TEST_CODE'); console.log(err.statusCode, err.code);` — confirm statusCode and code are set.
-
----
-
-### 3. Create Response Helper Utility
-**What**: Build `utils/responseHelper.js` with functions `sendSuccess(res, data, message, statusCode)` and `sendError(res, error, defaultMessage)`.
-**Why**: Ensures all success and error responses follow the same shape: `{ success, message, data/errors, code, timestamp }`.
-**Files**: `full-stackauthentication/utils/responseHelper.js`
-**Verify**: Run `node -c utils/responseHelper.js`; confirm exports two functions.
-
----
-
-### 4. Create Centralized Error Handling Middleware
-**What**: Build `middleware/errorHandler.middleware.js` that catches AppError instances, logs them, and returns consistent responses. Handle MongoDB duplicate key errors (11000), ValidationError, CastError, and unknown errors separately.
-**Why**: Single point where all errors are formatted and logged; removes error handling from every controller.
-**Files**: `full-stackauthentication/middleware/errorHandler.middleware.js`
-**Verify**: Run `node -c middleware/errorHandler.middleware.js`.
-
----
-
-### 5. Create Structured Logger Utility
-**What**: Build `utils/logger.js` exporting `info()`, `error()`, `warn()`, `debug()` functions. In production, strip stack traces and PII; in development, include full details.
-**Why**: Centralized logging avoids console.log spam; production logs don't expose sensitive info.
-**Files**: `full-stackauthentication/utils/logger.js`
-**Verify**: Run `node -c utils/logger.js`.
-
----
-
-### 6. Create User-Friendly Validator Middleware
-**What**: Refactor `middleware/validateRequest.middleware.js` wrapping both Joi and express-validator with consistent error format and user messages.
-**Why**: Staff and task validators use different libraries; consolidate into one pattern.
-**Files**: `full-stackauthentication/middleware/validateRequest.middleware.js`
-**Verify**: Run `node -c middleware/validateRequest.middleware.js`.
-
----
-
-### 7. Update auth.validator.js to Use AppError
-**What**: Import AppError and throw it with proper codes (VALIDATION_ERROR, etc.) instead of returning early.
-**Why**: Allows central error handler to catch and format it consistently.
-**Files**: `full-stackauthentication/validators/auth.validator.js`
-**Verify**: Existing auth tests (if any) pass; manual test: POST `/api/auth/register` with invalid email → response includes code field.
-
----
-
-### 8. Update task.validator.js to Use AppError
-**What**: Similar to auth.validator.js — throw AppError with codes like VALIDATION_ERROR.
-**Files**: `full-stackauthentication/validators/task.validator.js`
-**Verify**: Manual test: POST `/api/tasks/add` with missing title → response includes code field.
-
----
-
-### 9. Update staff.middleware.js Validator
-**What**: Convert from express-validator to Joi (matching task and auth pattern) or wrap in AppError. Ensure Ethiopian phone number validation passes.
-**Why**: Consistency across all validators; Joi offers better composability than express-validator chains.
-**Files**: `full-stackauthentication/middleware/staff.middleware.js`
-**Verify**: Manual test: POST `/api/staff/add` with invalid department → response includes code field with VALIDATION_ERROR.
-
----
-
-### 10. Update auth.controller.js with Try-Catch and AppError
-**What**: 
-- Wrap all endpoints in try-catch
-- Replace hardcoded res.status().json() calls with AppError throws (e.g., throw new AppError('User not found', 404, 'USER_NOT_FOUND'))
-- Use responseHelper.sendSuccess() for successful responses
-- Let central error handler catch all errors
-
-**Why**: Removes error handling boilerplate from controller; ensures consistent response format.
-**Files**: `full-stackauthentication/controllers/auth.controller.js`
-**Verify**: Manual test: POST `/api/auth/register` → confirm response includes success, message, code, timestamp.
-
----
-
-### 11. Update task.controller.js with Try-Catch and AppError
-**What**: Same refactor as auth.controller.js.
-**Files**: `full-stackauthentication/controllers/task.controller.js`
-**Verify**: Manual test: GET `/api/tasks/invalid-id` → confirm response includes proper error code (INVALID_ID_FORMAT).
-
----
-
-### 12. Update staff.controller.js with Try-Catch and AppError
-**What**: Same refactor as auth.controller.js.
-**Files**: `full-stackauthentication/controllers/staff.controller.js`
-**Verify**: Manual test: POST `/api/staff/add` → confirm error responses include code field.
-
----
-
-### 13. Update email.controller.js with Try-Catch and AppError
-**What**: Same refactor as auth.controller.js. Email service errors should throw AppError with codes like EMAIL_SERVICE_ERROR, EMAIL_NOT_CONFIGURED.
-**Files**: `full-stackauthentication/controllers/email.controller.js`
-**Verify**: Manual test: POST `/api/email/send` with email service down → response includes EMAIL_SERVICE_ERROR code.
-
----
-
-### 14. Update schedule.controller.js with Try-Catch and AppError
-**What**: Same refactor as auth.controller.js.
-**Files**: `full-stackauthentication/controllers/schedule.controller.js`
-**Verify**: Manual test: GET `/api/schedules/invalid-id` → response includes error code.
-
----
-
-### 15. Update server.js — Wire Middleware & Enable Security
-**What**:
-- Import and apply errorHandler middleware at the end (after all routes)
-- Uncomment and enable `express-mongo-sanitize()` middleware
-- Replace generic error handler with a small 404 handler that throws AppError
-- Import and use logger utility instead of console.log
-- Update startup messages to use logger
-
-**Why**: Central error handling works only if middleware is wired; mongo-sanitize prevents injection attacks; clean logging.
+### 2. Fix Port 5000 EADDRINUSE - Add Dynamic Port Selection
+**What**: Modify server startup to handle port conflicts gracefully by trying alternative ports.
 **Files**: `full-stackauthentication/server.js`
-**Verify**: Start server with `npm run dev` and confirm no errors; POST to `/invalid-route` → response includes code: 'NOT_FOUND'.
+**Changes**:
+- Replace hardcoded PORT with logic: try 5000, then 5001, 5002, etc. if in use
+- Add a helper function `getAvailablePort()` that attempts to bind to each port
+- Log the actual port used at startup
+**Verify**: Run `npm start` twice in two terminals; second instance should use port 5001; both should log their respective ports
 
----
+### 3. Fix Registration Validation Error Handling - Standardize Response Format
+**What**: Fix auth validator to return structured field errors, and ensure auth.controller.js processes them correctly.
+**Files**: `full-stackauthentication/validators/auth.validator.js`, `full-stackauthentication/controllers/auth.controller.js`
+**Changes**:
+- In `auth.validator.js`: Ensure validate() middleware returns errors array with `field`, `message`, `value` keys
+- In `auth.controller.js`: Catch and handle validation errors from the middleware properly; DO NOT catch them in the controller (middleware should catch first)
+- Ensure ALL error responses follow: `{ success: false, message: string, code: string, errors?: array, timestamp: ISO string }`
+**Verify**: `POST /api/auth/register` with invalid email like `De@gmail.com123` → response includes `{ code: 'VALIDATION_ERROR', errors: [{ field: 'email', message: '...', value: 'De@gmail.com123' }] }`
 
-### 16. Create .env.example
-**What**: Copy .env template with all required keys but no values. Include comments for each variable (MONGODB_URI, JWT_SECRET, EMAIL_*, FRONTEND_URL, NODE_ENV, PORT).
-**Why**: New developers and deployment pipes know what env vars are required.
+### 4. Fix Frontend Auth Context - Better Error Message Extraction
+**What**: Improve error handling in AuthContext to extract field-level validation errors from backend responses.
+**Files**: `frontendauth/src/context/AuthContext.jsx`, `frontendauth/src/services/auth.service.js`
+**Changes**:
+- In `auth.service.js`: Add error extraction helper `extractErrorFields()` that converts backend error array to field-keyed object: `{ field: message }`
+- In `AuthContext.jsx`: When catching errors in register/login, check if `error.response.data.errors` exists and extract field errors; throw with `{ message, errors: fieldMap }`
+- Components can then catch this and display field-level errors using the `errors.fieldName` pattern already in RegisterPage
+**Verify**: `POST /api/auth/register` with missing password → RegisterPage shows "Password is required" under password field, not generic banner
+
+### 5. Add Missing .env Example File
+**What**: Create `.env.example` in backend directory so developers know what variables to configure.
 **Files**: `full-stackauthentication/.env.example`
-**Verify**: File exists and contains all keys from current .env; developer can read it and understand what to set.
+**Changes**:
+- Copy current `.env` but replace sensitive values with placeholders: `EMAIL_PASSWORD=your_gmail_app_password_here`, `MONGODB_PASSWORD=your_password`, `JWT_SECRET=your_strong_secret_32chars_minimum`
+- Add comments explaining each variable
+**Verify**: File exists and contains all required keys with safe placeholder values
 
----
+## Priority 2: BACKEND IMPROVEMENTS
 
-### 17. Ensure express-mongo-sanitize is Installed
-**What**: Confirm `npm ls express-mongo-sanitize` returns a version; if not, run `npm install express-mongo-sanitize@^2.2.0`.
-**Why**: Security: prevents NoSQL injection attacks.
-**Files**: `full-stackauthentication/package.json` (already has it, verify it's installed)
-**Verify**: Run `npm ls express-mongo-sanitize` in backend directory; confirm it shows a version.
+### 6. Add Centralized Error Codes Registry
+**What**: Create a JSON file that maps error codes to HTTP status, message templates, and recommended user-facing text.
+**Files**: `full-stackauthentication/config/ERROR_CODES.json`
+**Changes**:
+- Create structure: `{ "VALIDATION_ERROR": { "httpStatus": 400, "code": "VALIDATION_ERROR", "userMessage": "Please check the form fields and try again" }, ... }`
+- Include: VALIDATION_ERROR, DUPLICATE_FIELD, INVALID_CREDENTIALS, ACCOUNT_DEACTIVATED, EMAIL_DISABLED, REGISTRATION_ERROR, LOGIN_ERROR, etc.
+**Verify**: Run `node -e "const codes = require('./config/ERROR_CODES.json'); console.log(Object.keys(codes).length)"` → outputs number of error codes (should be 10+)
 
----
+### 7. Improve Email Service Error Messages - Add EMAIL_SERVICE_DISABLED vs EMAIL_DELIVERY_FAILED Distinction
+**What**: Distinguish between email service not being enabled at all vs. runtime delivery failures.
+**Files**: `full-stackauthentication/services/email.service.js`, `full-stackauthentication/controllers/email.controller.js`
+**Changes**:
+- In `email.service.js`: Add `isEmailEnabled` check at the start of each send method; if false, return `{ success: false, code: 'EMAIL_SERVICE_DISABLED', error: '...' }`
+- Return proper codes like `EMAIL_DELIVERY_FAILED`, `EMAIL_INVALID_RECIPIENT`, `EMAIL_RATE_LIMITED`
+- In `email.controller.js`: Pass these codes through to the response without modification
+**Verify**: `GET /api/email/check` with service disabled returns `{ connected: false, code: 'EMAIL_SERVICE_DISABLED' }`. `POST /api/email/send` with service disabled returns same code in response.
 
-## Frontend Changes (Ordered by Dependency)
+### 8. Fix Staff Controller & Middleware Consistency
+**What**: Ensure staff.routes.js validation middleware is properly wired and error handling is consistent with auth patterns.
+**Files**: `full-stackauthentication/routes/staff.routes.js`, `full-stackauthentication/middleware/staff.middleware.js`, `full-stackauthentication/controllers/staff.controller.js`
+**Changes**:
+- Verify `staff.middleware.js` exports `validate()` function similar to auth validator
+- Ensure all staff controller methods wrap db calls in try-catch and return consistent error format
+- Ensure POST /api/staff/add uses the validate middleware correctly: `router.post('/add', validate(validateEmployeeData), staffController.addEmployee)`
+**Verify**: `POST /api/staff/add` with missing required fields → returns `{ success: false, code: 'VALIDATION_ERROR', errors: [...] }`
 
-### 18. Create Error Messages Utility
-**What**: Build `src/utils/errorMessages.js` exporting function `getErrorMessage(code, fallback)` that maps backend error codes to user-friendly strings. Example: `AUTH_INVALID_CREDENTIALS` → "Invalid email or password", `VALIDATION_ERROR` → "Please check the form and try again".
-**Why**: Frontend displays codes instead of raw messages; one place to maintain user messaging.
-**Files**: `frontendauth/src/utils/errorMessages.js`
-**Verify**: Run `node -c src/utils/errorMessages.js` (or confirm via import in a test file).
+### 9. Add Comprehensive API Health & Status Endpoint
+**What**: Enhance the `/health` endpoint to report on all subsystems in detail.
+**Files**: `full-stackauthentication/server.js`
+**Changes**:
+- Expand the health endpoint response to include: `{ database: { status, connected, ping_ms }, email: { status, enabled, verified }, jwt: { configured, strongSecret }, cors: { origins_count }, environment: { NODE_ENV, uptime }, version }`
+- Add a new endpoint `GET /api/system/diagnostics` that runs tests for database, email, JWT, and reports detailed findings
+**Verify**: `GET /health` returns status for all major subsystems. `GET /api/system/diagnostics` runs connection tests and reports findings.
 
----
+## Priority 3: FRONTEND CRITICAL FIXES
 
-### 19. Enhance API Interceptor — Better Error Normalization
-**What**: Update `src/services/api.js` response interceptor to:
-- Extract and display field-level validation errors separately (toast for each field)
-- Map error codes to user-friendly messages using the new errorMessages utility
-- Add retry logic for network errors (max 2 retries with exponential backoff)
-- Log full error object in development, sanitized version in production
-
-**Why**: Field-level errors currently show in a hard-to-read format; retry logic handles flaky networks (important on Render free tier).
-**Files**: `frontendauth/src/services/api.js`
-**Verify**: Manual test: POST to register with validation error → toast displays field errors separately.
-
----
-
-### 20. Create Error Alert Component
-**What**: Build `src/components/ui/ErrorAlert.jsx` — a reusable component for displaying inline form errors with icon, message, and dismissal. Use red color scheme.
-**Why**: Replace inline error text in forms with a consistent, styled alert component.
-**Files**: `frontendauth/src/components/ui/ErrorAlert.jsx`
-**Verify**: Create in component folder; import and render in RegisterPage to replace the manual error `<p>` tags.
-
----
-
-### 21. Update RegisterPage — Use ErrorAlert Component
-**What**: Replace inline `{errors.field && <p>...</p>}` patterns with `<ErrorAlert message={errors.field} />`.
-**Why**: Consistency and easier to maintain error styling across the app.
+### 10. Improve RegisterPage Error Display - Field-Level Errors
+**What**: Update RegisterPage.jsx to display field-level validation errors from backend below each field, not just in a banner.
 **Files**: `frontendauth/src/pages/RegisterPage.jsx`
-**Verify**: Manual test: Fill form incorrectly → errors display in alert components (styled consistently).
+**Changes**:
+- Already partially implemented; ensure the component extracts `error.errors` from backend response in the catch block
+- Map backend field errors to local state: `setErrors(prev => ({ ...prev, ...fieldErrorMap }))`
+- Each field's error `p` tag already displays errors.fieldName, so this just needs the error extraction logic to work
+**Verify**: `POST /api/auth/register` with `{ email: 'invalid' }` → shows "Please enter a valid email address" below email field, not just in banner
 
----
+### 11. Fix API Client Error Interception - Extract Error Details
+**What**: Improve the API interceptor in auth.service.js / api.js to properly extract backend error messages.
+**Files**: `frontendauth/src/services/api.js` (if exists) or `frontendauth/src/services/auth.service.js`
+**Changes**:
+- In catch block of register/login, extract `error.response?.data?.message` and `error.response?.data?.errors`
+- Create custom error object: `throw { message, errors, code: error.response?.data?.code }`
+- This allows components to access both `error.message` and `error.errors`
+**Verify**: When backend returns `{ code: 'VALIDATION_ERROR', errors: [...] }`, the catch block receives this structure and can use it
 
-### 22. Update LoginPage — Use ErrorAlert Component
-**What**: Same refactor as RegisterPage; also update API error handling to map codes to messages.
-**Files**: `frontendauth/src/pages/LoginPage.jsx`
-**Verify**: Manual test: POST with wrong password → error message is user-friendly (not "INVALID_CREDENTIALS").
+### 12. Add Loading States to RegisterPage & LoginPage
+**What**: Show loading spinners on form submission and disable form inputs while request is in flight.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`, `frontendauth/src/pages/LoginPage.jsx`
+**Changes**:
+- Both pages already have `loading` state from `useAuth()` hook
+- In RegisterPage: disable all input fields when `loading={true}`: `<input disabled={loading} ... />`
+- Show spinner in form fields during load
+- Already implemented in buttons, verify it's working
+**Verify**: Submit form → button shows spinner, all inputs disabled, form cannot be re-submitted while loading
 
----
+### 13. Add Toast Error Notifications
+**What**: Use react-hot-toast to show error messages as toasts instead of just in component state.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`, `frontendauth/src/pages/LoginPage.jsx`
+**Changes**:
+- Import `toast` from 'react-hot-toast'
+- In RegisterPage catch block: `toast.error(error.message || 'Registration failed')`
+- In LoginPage catch block: `toast.error('Invalid credentials')` or extract specific message
+- Keep field-level errors in state for display below fields
+- Toasts for banner-level errors (network, server errors); field errors below inputs
+**Verify**: Register with duplicate email → see error toast + field error below email input
 
-### 23. Create 404 NotFound Page
-**What**: Build `src/pages/NotFound.jsx` displaying "Page Not Found" with Bunna Bank branding and a button to return to dashboard.
-**Why**: Gracefully handle 404 errors; currently no route matches 404.
-**Files**: `frontendauth/src/pages/NotFound.jsx`
-**Verify**: File exists; add route in App.jsx `<Route path="*" element={<NotFound />}` and test.
+### 14. Add Empty State Designs to Dashboard
+**What**: When there are no tasks, schedules, or staff, show helpful empty state UI instead of blank page.
+**Files**: `frontendauth/src/pages/Dashboard.jsx`, `frontendauth/src/components/Dashboard/*.jsx`
+**Changes**:
+- Create empty state components if they don't exist: empty schedule, empty tasks, empty staff
+- Each should show an icon, brief message, and link to create the first item
+- Import these in task/schedule/staff table components and show when `items.length === 0`
+**Verify**: Dashboard with no data shows friendly empty states with creation prompts
 
----
+## Priority 4: MOBILE-FIRST RESPONSIVE DESIGN
 
-### 24. Create 500 ServerError Page
-**What**: Build `src/pages/ServerError.jsx` displaying "Server Error — Please Try Again Later" with contact support link.
-**Why**: Gracefully handle 500+ errors; user sees a friendly page, not a raw error.
-**Files**: `frontendauth/src/pages/ServerError.jsx`
-**Verify**: File exists and displays error message; can be tested by triggering a 500 from backend.
+### 15. Fix Touch Targets on Mobile - Ensure 44x44px Minimum
+**What**: Audit all clickable elements (buttons, links, checkboxes) to ensure they meet 44x44px minimum touch target size on mobile.
+**Files**: `frontendauth/src/App.css`, `frontendauth/src/pages/RegisterPage.jsx`, `frontendauth/src/pages/LoginPage.jsx`, component files
+**Changes**:
+- Register/Login buttons: already use `py-3.5 px-6` which is sufficient
+- Input fields: ensure padding is at least 10px top/bottom, icon buttons inside use `p-1` which is too small; increase to `p-2`
+- Checkboxes: currently `w-4 h-4`, increase to `w-5 h-5` (20px)
+- All interactive elements: add minimum `min-h-[44px] min-w-[44px]` where appropriate
+**Verify**: On mobile device (test with devtools 375px viewport), tap password show/hide icon, checkbox, buttons → all respond easily without misclicks
 
----
+### 16. Improve Mobile Form Layout - Stack Inputs Properly
+**What**: Ensure form fields stack vertically on mobile and don't have confusing grid layouts.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`
+**Changes**:
+- First name + Last name row: already uses `grid grid-cols-1 sm:grid-cols-2` which is correct
+- Phone field with country code: verify it wraps properly on 320px screens
+- Increase input padding slightly on mobile: `py-3` instead of `py-2.5` for easier interaction
+**Verify**: On 375px mobile viewport, register form displays in single column, all fields fully visible without horizontal scroll
 
-### 25. Update App.jsx Routes — Add 404/Error Pages
-**What**: Add routes for NotFound (path="*") and ServerError (caught by ErrorBoundary or triggered manually).
-**Why**: Complete the frontend error handling chain.
-**Files**: `frontendauth/src/App.jsx`
-**Verify**: Manual test: Navigate to `/nonexistent` → NotFound page displays.
+### 17. Fix Responsive Typography - Scale for Mobile
+**What**: Ensure text sizes are readable on mobile without being too large.
+**Files**: `frontendauth/src/pages/LoginPage.jsx`, `frontendauth/src/pages/RegisterPage.jsx`
+**Changes**:
+- Headings: use `text-2xl sm:text-3xl` (already doing this, good)
+- Body text: use `text-sm` consistently, don't go below text-xs for important content
+- Labels: currently `text-xs` which is 12px; on mobile this is acceptable for labels
+**Verify**: On mobile, all text is readable without zooming; headings are prominent but not overwhelming
 
----
+### 18. Add Mobile Navigation Menu - Hamburger for Sidebar (if applicable)
+**What**: If dashboard has a sidebar, make it collapsible on mobile.
+**Files**: `frontendauth/src/components/Sidebar/Sidebar.jsx`
+**Changes**:
+- Add state: `const [sidebarOpen, setSidebarOpen] = useState(false)`
+- On mobile (`md:hidden`), show hamburger button in header that toggles sidebar
+- Sidebar should slide in from left or overlay on mobile
+- Use modal overlay behind sidebar to close when clicking outside
+**Verify**: Dashboard on 375px screen shows hamburger menu, click opens sidebar overlay, can close
 
-### 26. Enhance ErrorBoundary — Integration with Error Pages
-**What**: Update `src/components/ErrorBoundary.jsx` to:
-- Link "Go Home" button to `/dashboard` (already does this)
-- Add option to send error report to backend (optional, POST to `/api/errors` if endpoint exists)
-- Style to match Bunna Bank branding (brown/amber colors)
+## Priority 5: USER-FRIENDLINESS ENHANCEMENTS
 
-**Why**: ErrorBoundary should feel part of the app, not a separate UI.
-**Files**: `frontendauth/src/components/ErrorBoundary.jsx`
-**Verify**: Trigger a React error (e.g., render null.property) → ErrorBoundary displays styled fallback.
+### 19. Add Success Toast After Form Submission
+**What**: Show success message as toast when registration/login succeeds before navigation.
+**Files**: `frontendauth/src/context/AuthContext.jsx`
+**Changes**:
+- Already implemented: `toast.success('Registration successful! 🎉')`
+- Verify it displays with correct duration (3 seconds) and styling
+- Message should be brief and celebratory
+**Verify**: Successfully register → see green toast "Registration successful! 🎉" for 3 seconds, then redirect
 
----
+### 20. Add Inline Validation Feedback During Typing
+**What**: Clear field-level errors as soon as user starts correcting them.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`, `frontendauth/src/pages/LoginPage.jsx`
+**Changes**:
+- Already implemented: `if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));` on change
+- Verify it's working for all fields
+- When user types in an errored field, the error message disappears immediately
+**Verify**: Show error below field, start typing → error disappears
 
-### 27. Update AddTaskForm — Use ErrorAlert
-**What**: Replace inline error text with ErrorAlert component; map API error codes to user messages.
-**Files**: `frontendauth/src/components/AddTaskForm.jsx`
-**Verify**: Manual test: Submit task with missing title → error displays in alert.
+### 21. Add Password Strength Indicator
+**What**: Show real-time password strength feedback during registration.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`
+**Changes**:
+- Already implemented with `passwordStrength` useMemo hook
+- Shows strength bar with colors: red (weak), amber (fair), blue (strong), green (very strong)
+- Verify styling and accuracy of strength calculation
+**Verify**: Type password → strength bar appears and updates; 8+ chars = green, mixed case + number = stronger
 
----
+### 22. Improve Form Error Messages - Make Them Specific & Actionable
+**What**: Ensure all error messages tell users exactly what to fix, not just that something is wrong.
+**Files**: `full-stackauthentication/validators/auth.validator.js`, frontend components
+**Changes**:
+- Backend validation messages are already good: "Please enter a valid phone number (9-15 digits)"
+- Frontend validation messages are good: "Email is already registered. Please sign in."
+- Replace generic "Validation failed" with specific field messages
+**Verify**: Register with all missing fields → each field shows specific error like "First name is required", "Email is required", etc.
 
-### 28. Update AddStaffForm — Use ErrorAlert
-**What**: Same refactor as AddTaskForm.
-**Files**: `frontendauth/src/components/AddStaffForm.jsx`
-**Verify**: Manual test: Submit staff with invalid email → error displays in alert.
+### 23. Add Helpful Placeholders & Labels
+**What**: Make form labels and placeholders clear about what's expected.
+**Files**: `frontendauth/src/pages/RegisterPage.jsx`, `frontendauth/src/pages/LoginPage.jsx`
+**Changes**:
+- All fields already have good labels and placeholders
+- Phone field shows example: "911 234 567" with +251 prefix
+- Email shows: "abebe.kebede@bunnabank.com"
+- Password shows: "Min 8 chars, uppercase, lowercase, number, symbol"
+- These are already implemented and good
+**Verify**: Forms have clear labels and helpful placeholder examples
 
----
+## Priority 6: VISUAL DESIGN IMPROVEMENTS
 
-## Documentation
+### 24. Fix Color Consistency - Use Tailwind Classes Properly
+**What**: Ensure all color usage is consistent and from a defined palette.
+**Files**: All component files using Tailwind
+**Changes**:
+- Primary brown: `#3d1209` (used for buttons, headers)
+- Gold/amber accent: `#f59e0b` (highlights)
+- Error: `text-red-600`, `bg-red-50`
+- Success: `text-emerald-600`, `bg-emerald-50`
+- All are already consistently applied in LoginPage and RegisterPage
+**Verify**: Review UI and confirm all brand colors match the defined palette
 
-### 29. Create ERROR_HANDLING.md
-**What**: Write guide covering:
-- Error code reference (AUTH_*, VALIDATION_*, DB_*, GENERAL_*)
-- Backend error flow (controller → AppError → middleware → response)
-- Frontend error flow (axios interceptor → errorMessages → UI)
-- How to add new error codes
-- Troubleshooting common errors (MONGODB_CONNECTION_ERROR, EMAIL_NOT_CONFIGURED, TOKEN_EXPIRED)
-- Production vs development error logging
+### 25. Add Smooth Transitions & Animations
+**What**: Add Tailwind transition classes to interactive elements for polish.
+**Files**: Component files
+**Changes**:
+- Buttons already have: `transition-all duration-200 hover:shadow-xl`
+- Input fields already have: `transition-all focus:outline-none`
+- These are already good; verify they're applied consistently
+- Consider adding `animate-fade-in` to modals and error messages (already used)
+**Verify**: Hover over buttons, focus on inputs → smooth transitions are visible
 
-**Why**: Developers need to understand how to add errors and debug issues.
-**Files**: `d:\backup-t3\Desktop\Scheedule-managmet-system-bunna-bank\ERROR_HANDLING.md`
-**Verify**: File exists and is readable; includes at least 5 error codes with examples.
+### 26. Improve Card & Section Spacing
+**What**: Ensure proper spacing between major sections and cards for visual hierarchy.
+**Files**: `frontendauth/src/pages/Dashboard.jsx`, component files
+**Changes**:
+- Add consistent gap between sections: `space-y-6` or `space-y-8`
+- Card padding should be consistent: `p-6` or `p-8`
+- Follow existing Bunna Bank styling already established in LoginPage
+**Verify**: Dashboard looks organized with clear visual separation between sections
 
----
+## Priority 7: CROSS-DEVICE COMPATIBILITY
 
-### 30. Create ERROR_CODES.json Reference
-**What**: Build a JSON file listing all error codes, HTTP status, and user message. Machine-readable for frontend code generation tools (optional future enhancement).
-**Why**: Single reference for error codes; can be used to auto-generate frontend error maps.
-**Files**: `d:\backup-t3\Desktop\Scheedule-managmet-system-bunna-bank\ERROR_CODES.json`
-**Verify**: File is valid JSON; contains at least 20 error codes with structure: `{ "code": "AUTH_INVALID_CREDENTIALS", "status": 401, "userMessage": "Invalid email or password" }`.
+### 27. Fix iOS Safari Specific Issues
+**What**: Test and fix any iOS Safari rendering issues (input styling, viewport, orientation).
+**Files**: `frontendauth/index.html`, `frontendauth/src/App.css`
+**Changes**:
+- Ensure `index.html` has proper meta tags:
+  - `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`
+  - `<meta name="apple-mobile-web-app-capable" content="yes">`
+  - `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`
+- Add CSS to prevent zoom on input focus (iOS 16+): `input { font-size: 16px !important; }`
+- Test that buttons don't get double-tapped
+**Verify**: Test on iOS Safari (or simulator) → inputs don't zoom, buttons are tappable, no rendering glitches
 
----
+### 28. Fix Android Chrome Issues
+**What**: Test and fix any Android Chrome specific issues (overflow, statusbar, bottom nav).
+**Files**: `frontendauth/src/App.css`
+**Changes**:
+- Ensure scrolling works smoothly: add `scroll-behavior: smooth` to html in CSS
+- Fix any overflow issues on Android by ensuring `overflow-x: hidden` on body/html
+- Test keyboard appearing doesn't break layout: use `position: fixed` with `inset` instead of `vh` units for modals
+**Verify**: Test on Android Chrome → form is responsive, keyboard doesn't cover submit button, scroll works
 
-## Production / Render Readiness
+### 29. Add Responsive Breakpoint Testing
+**What**: Document and verify responsive design at all breakpoints.
+**Files**: Testing documentation
+**Changes**:
+- Create breakpoint test checklist: 320px (iPhone SE), 375px (iPhone 12), 768px (iPad), 1024px (desktop)
+- Test on each: form layout, button sizes, touch targets, text readability, no horizontal scroll
+- Use browser devtools device emulation
+**Verify**: Manual testing or documented testing shows all breakpoints work
 
-### 31. Verify .env Configuration
-**What**: Ensure .env has all keys from .env.example; verify FRONTEND_URL includes current Render deployment URL (already does: `https://scheedule-managmet-system-bunna-bank-1.onrender.com`).
-**Why**: Render uses .env; missing keys cause startup failures.
-**Files**: `full-stackauthentication/.env`
-**Verify**: Compare keys in .env against .env.example; all present.
+## Priority 8: SYSTEM INTEGRATION & TESTING
 
----
+### 30. Create Integration Test Plan
+**What**: Document the happy path for registration → login → dashboard access.
+**Files**: `.agents/tasks/integration-test-plan.md`
+**Changes**:
+- Step 1: POST /auth/register with valid data → 201, token returned
+- Step 2: Login with those credentials → 200, token returned
+- Step 3: GET /auth/profile with token → 200, user data returned
+- Step 4: Frontend receives token, stores in localStorage, redirects to dashboard
+- Step 5: Dashboard makes API call with auth header, gets data
+**Verify**: Manually walk through this path end-to-end; all steps succeed
 
-### 32. Verify CORS Origins
-**What**: Confirm server.js CORS config includes all deployment URLs (localhost for dev, Render URLs for prod).
-**Why**: Frontend on Render can't call backend if CORS doesn't whitelist it.
-**Files**: `full-stackauthentication/server.js` (already configured correctly)
-**Verify**: Regex in server.js includes `scheedule-managmet-system-bunna-bank-.*\.onrender\.com`; manual test on Render.
+### 31. Document CORS and API Configuration
+**What**: Clarify CORS configuration and API base URL setup.
+**Files**: `full-stackauthentication/server.js`, `frontendauth/.env`
+**Changes**:
+- Backend .env already lists allowed origins
+- Frontend .env has VITE_API_URL set correctly
+- Add comments explaining: "For local dev, use http://localhost:5000; for production, use Render URL"
+- Backend logging already shows CORS origins on startup
+**Verify**: Check server logs show correct CORS origins; frontend calls to backend work from both local and production
 
----
+## Summary of Key Files to Modify
 
-### 33. Verify Frontend Build & Env Vars
-**What**: Confirm `frontendauth/.env` or `.env.production` has VITE_API_URL pointing to Render backend URL (or uses fallback in api.js).
-**Why**: Frontend build needs to know backend URL; currently api.js auto-detects based on hostname.
-**Files**: `frontendauth/.env.example` (create if missing) and verify `src/services/api.js` fallback logic works.
-**Verify**: Build frontend: `npm run build` in frontendauth; confirm no errors.
+**Backend**:
+- `.env` - Email password
+- `server.js` - Port handling, health endpoint
+- `validators/auth.validator.js` - Error format
+- `controllers/auth.controller.js` - Error handling
+- `services/email.service.js` - Email error codes
+- `controllers/email.controller.js` - Pass through error codes
+- `middleware/staff.middleware.js` - Validation consistency
+- `config/ERROR_CODES.json` - (NEW) Centralized error registry
 
----
+**Frontend**:
+- `context/AuthContext.jsx` - Better error extraction
+- `services/auth.service.js` - Error field mapping
+- `pages/RegisterPage.jsx` - Field errors, validation
+- `pages/LoginPage.jsx` - Error toasts
+- `pages/Dashboard.jsx` - Empty states
+- `index.html` - Meta tags for iOS
+- `src/App.css` - Global responsive styles
 
-## Testing & Verification
+**New Files**:
+- `full-stackauthentication/.env.example` - Template
+- `full-stackauthentication/config/ERROR_CODES.json` - Error registry
+- `frontendauth/src/components/EmptyState.jsx` - Empty state component
 
-### 34. Full Backend Build & Test
-**What**: Run `npm install` and `npm run dev` in backend directory; confirm no errors; test all endpoints with valid and invalid data.
-**Why**: Catch any missing dependencies or syntax errors before commit.
-**Files**: `full-stackauthentication/`
-**Verify**: 
-- `npm install` completes without errors
-- `npm run dev` starts server on port 5000
-- POST `/api/auth/register` with valid data returns 201 with token
-- POST `/api/auth/register` with invalid email returns 400 with error code
-- GET `/nonexistent` returns 404 with code
+## Testing Strategy
 
----
+1. **Unit Testing**: Each controller/service should handle errors gracefully
+2. **Integration Testing**: Full auth flow (register → login → dashboard)
+3. **Mobile Testing**: All viewports from 320px to 1024px+
+4. **Error Scenario Testing**: Missing fields, duplicate email, invalid phone, weak password
+5. **Email Testing**: Test with `/api/email/test` endpoint
+6. **Cross-Device Testing**: iOS Safari, Android Chrome, Firefox
 
-### 35. Full Frontend Build & Test
-**What**: Run `npm install` and `npm run build` in frontend directory; confirm no errors; test key pages.
-**Why**: Build catches TypeScript/JSX errors; ensures frontend deploys cleanly.
-**Files**: `frontendauth/`
-**Verify**:
-- `npm install` completes
-- `npm run build` completes without errors
-- Navigate to `/login` and `/register` → pages render
-- RegisterPage displays field-level errors correctly
-- `/nonexistent` route shows NotFound page
+## Rollout Order
 
----
-
-## Summary
-
-This plan spans 35 items across backend (17) and frontend (18), organized by dependency. Implementation order:
-1. Backend utils (errorCodes, AppError, responseHelper, logger) — foundation
-2. Backend middleware (error handler, validators) — wiring
-3. Backend controller updates — apply new patterns
-4. Backend server.js updates — enable middleware and security
-5. Frontend utils (errorMessages, ErrorAlert, error pages) — foundation
-6. Frontend page updates — use new components
-7. Documentation and verification
-
-All changes maintain backward compatibility with existing routes; no breaking changes to client code.
-
-**Estimated Effort**: 8–10 developer hours (2 devs, 4–5 hours each).
-
-**Expected Outcome**: 
-- Consistent, user-friendly error messages across all endpoints
-- Centralized error handling reduces code duplication
-- Production-ready security (mongo-sanitize enabled, no stack traces leaked)
-- Clear error documentation for future maintenance
-- Ready for Render deployment with proper error reporting
+1. Fix email credentials and test email service
+2. Fix port EADDRINUSE issue
+3. Fix registration validation and error responses
+4. Fix frontend error handling and display
+5. Improve error messages and codes
+6. Add responsive design fixes
+7. Add UX enhancements (loading states, empty states, toasts)
+8. Visual design polish
+9. Integration testing
+10. Deploy to production

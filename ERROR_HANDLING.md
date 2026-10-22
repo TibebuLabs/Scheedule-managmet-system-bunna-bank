@@ -1,125 +1,190 @@
-# Error Handling Guide
+# Error Handling Guide - Bunna Bank Schedule Management System
 
-This document describes the error handling system for the Bunna Bank Schedule Management System. All API endpoints follow a consistent error response format with user-friendly messages, machine-readable error codes, and appropriate HTTP status codes.
+This document describes all error codes, status codes, and troubleshooting steps for the Schedule Management System.
 
----
+## Overview
 
-## Error Response Format
-
-All error responses follow this structure:
+The API uses structured error responses with a consistent format:
 
 ```json
 {
   "success": false,
-  "message": "Human-readable message",
-  "code": "ERROR_CODE",
-  "status": 400,
-  "timestamp": "2024-10-22T15:30:45.123Z",
+  "message": "User-friendly error message",
+  "code": "ERROR_CODE_CONSTANT",
   "errors": [
     {
-      "field": "email",
-      "message": "Email is required",
-      "value": null
+      "field": "fieldName",
+      "message": "Field-specific error message",
+      "value": "the_value_that_failed"
     }
-  ]
+  ],
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
-**Fields:**
-- `success`: Always `false` for error responses
-- `message`: User-friendly message (safe to display in UI)
-- `code`: Machine-readable error code for frontend conditional logic
-- `status`: HTTP status code
-- `timestamp`: ISO 8601 timestamp for traceability
-- `errors`: (Optional) Array of field-level validation errors
+All responses include a `code` property for programmatic error handling and a `message` property for user display.
 
 ---
 
-## Error Codes Reference
+## Authentication Errors
 
-### Authentication Errors (400–401)
+### NO_TOKEN (401)
 
-| Code | Status | Message | Cause | Action |
-|------|--------|---------|-------|--------|
-| MISSING_CREDENTIALS | 400 | Missing required fields | Email or password not provided | Provide both email and password |
-| INVALID_CREDENTIALS | 401 | Invalid email or password | Email/password mismatch | Verify credentials and try again |
-| DUPLICATE_FIELD | 409 | Email already registered | Email exists in database | Use a different email or log in |
-| VALIDATION_ERROR | 400 | Validation failed | Field validation failed (e.g., invalid email format, weak password) | Fix errors shown per field and resubmit |
-| ACCOUNT_DEACTIVATED | 403 | Your account has been deactivated | Admin disabled the account | Contact your administrator |
-| NO_TOKEN | 401 | No authorization token provided | Token missing from Authorization header | Include `Authorization: Bearer <token>` header |
-| TOKEN_EXPIRED | 401 | Your session has expired | JWT token expired | Log in again to get a new token |
-| INVALID_TOKEN | 401 | Invalid or malformed token | JWT signature invalid or malformed | Log in again |
-| AUTH_FAILED | 401 | Authentication failed | Catch-all auth error (usually token issue) | Log in again |
-| USER_NOT_FOUND | 404 | User not found | User ID in token no longer exists | Log in again (administrator may have deleted account) |
-| REGISTRATION_ERROR | 500 | Registration failed | Unexpected server error during registration | Try again; contact support if persists |
-| LOGIN_ERROR | 500 | Login failed | Unexpected server error during login | Try again; contact support if persists |
+**Cause**: Authorization header not provided or empty  
+**User Message**: Authentication required. Please log in.  
+**How to Fix**:
+- Ensure your application is attaching the Authorization header: `Authorization: Bearer <token>`
+- Check that the token is stored correctly in localStorage
+- Log in again to get a fresh token
 
-### Rate Limiting (429)
+**Example**:
+```
+GET /api/auth/profile
+→ Response: { code: "NO_TOKEN", message: "Not authorized to access this route" }
+```
 
-| Code | Status | Message | Cause | Action |
-|------|--------|---------|-------|--------|
-| RATE_LIMIT_EXCEEDED | 429 | Too many requests. Please try again in a few minutes. | Too many API calls within time window | Wait 15 minutes and retry |
+### INVALID_TOKEN (401)
 
-**Limits:**
-- Auth endpoints (`/api/auth/*`): 10 requests per 15 minutes (strict to prevent brute force)
-- General API: 100 requests per 15 minutes
+**Cause**: Token is malformed, tampered, or signed with wrong key  
+**User Message**: Your session is invalid. Please log in again.  
+**How to Fix**:
+- Clear browser cache and localStorage
+- Log in again to get a fresh token
+- Verify backend JWT_SECRET hasn't changed
+- Check for network proxies that might modify headers
 
-### Task Errors (400–500)
+**Example**:
+```
+GET /api/auth/profile
+Header: Authorization: Bearer invalid.token.here
+→ Response: { code: "INVALID_TOKEN", message: "Invalid token" }
+```
 
-| Code | Status | Message | Cause | Action |
-|------|--------|---------|-------|--------|
-| VALIDATION_ERROR | 400 | Validation failed | Task field validation failed (e.g., missing title, invalid deadline) | Fix errors shown per field and resubmit |
-| INVALID_ID | 400 | Invalid task ID | Task ID is not a valid MongoDB ObjectId | Use a valid task ID |
-| TASK_NOT_FOUND | 404 | Task not found | Task ID does not exist | Verify the task ID and try again |
+### TOKEN_EXPIRED (401)
 
-### Staff Errors (400–500)
+**Cause**: Token has passed its expiration time (default 7 days)  
+**User Message**: Your session has expired. Please log in again.  
+**How to Fix**:
+- Log in again to get a fresh token
+- Tokens expire after 7 days; the frontend automatically redirects to login
+- Plan for longer workflows: implement refresh tokens in future versions
 
-| Code | Status | Message | Cause | Action |
-|------|--------|---------|-------|--------|
-| VALIDATION_ERROR | 400 | Validation failed | Staff field validation failed | Fix errors shown per field and resubmit |
-| INVALID_ID | 400 | Invalid staff member ID | ID is not a valid MongoDB ObjectId | Use a valid staff ID |
-| STAFF_NOT_FOUND | 404 | Staff member not found | Staff ID does not exist | Verify the staff ID and try again |
+**Example**:
+```
+GET /api/auth/profile
+Header: Authorization: Bearer eyJhbGc... (token from 8 days ago)
+→ Response: { code: "TOKEN_EXPIRED", message: "Token has expired. Please login again", expiredAt: "2024-01-08T..." }
+```
 
-### Server Errors (500)
+### ACCOUNT_DEACTIVATED (403)
 
-| Code | Status | Message | Cause | Action |
-|------|--------|---------|-------|--------|
-| SERVER_ERROR | 500 | An unexpected error occurred | Unhandled exception or database error | Contact support; include the timestamp from the error response |
+**Cause**: User account has been deactivated by administrator  
+**User Message**: Your account has been deactivated. Please contact your administrator.  
+**How to Fix**:
+- Contact your administrator to reactivate your account
+- Check if you've violated bank policies
+- Verify you're using the correct account
 
-### Network & Client Errors
+**Example**:
+```
+POST /api/auth/login
+Body: { email: "user@bank.com", password: "..." }
+→ Response: { code: "ACCOUNT_DEACTIVATED", message: "Account is deactivated" }
+```
 
-| Code | Status | Message | Cause | Frontend Handling |
-|------|--------|---------|-------|-------------------|
-| NETWORK_ERROR | N/A | Network error. Please check your connection. | No internet connection or backend unreachable | Show offline message; user can retry |
-| REQUEST_ERROR | N/A | Request setup failed | Malformed request or CORS issue | Contact support; likely a frontend code issue |
+### AUTH_FAILED (401)
+
+**Cause**: General authentication verification failed  
+**User Message**: Authentication failed. Please try again.  
+**How to Fix**:
+- Log in again
+- Clear localStorage and cache
+- Try in an incognito/private browser window
+- Check network connectivity
+
+### AUTH_SERVER_ERROR (500)
+
+**Cause**: Unexpected error during authentication process  
+**User Message**: Server error during authentication. Please try again later.  
+**How to Fix**:
+- Try again in a few moments
+- Contact support if error persists
+- Check server logs: `tail -f server.log`
 
 ---
 
-## HTTP Status Code Guide
+## Login & Registration Errors
 
-| Status | Meaning | Common Codes |
-|--------|---------|--------------|
-| 400 | Bad Request | VALIDATION_ERROR, MISSING_CREDENTIALS, INVALID_ID |
-| 401 | Unauthorized | INVALID_CREDENTIALS, NO_TOKEN, TOKEN_EXPIRED, INVALID_TOKEN, AUTH_FAILED |
-| 403 | Forbidden | ACCOUNT_DEACTIVATED |
-| 404 | Not Found | USER_NOT_FOUND, TASK_NOT_FOUND, STAFF_NOT_FOUND |
-| 409 | Conflict | DUPLICATE_FIELD |
-| 429 | Too Many Requests | RATE_LIMIT_EXCEEDED |
-| 500 | Server Error | SERVER_ERROR, REGISTRATION_ERROR, LOGIN_ERROR |
+### MISSING_CREDENTIALS (400)
+
+**Cause**: Email or password field is empty or not provided  
+**User Message**: Please provide both email and password  
+**How to Fix**:
+- Enter your email address
+- Enter your password
+- Don't leave fields blank
+
+### INVALID_CREDENTIALS (401)
+
+**Cause**: Email doesn't exist or password is incorrect  
+**User Message**: Invalid email or password. Please try again.  
+**How to Fix**:
+- Verify your email address is correct (check for typos)
+- Verify your password is correct (note: passwords are case-sensitive)
+- Use "Forgot Password" if available to reset
+- Create a new account if you haven't registered yet
+
+### DUPLICATE_FIELD (409)
+
+**Cause**: Email or phone already registered in system  
+**User Message**: This email or phone number is already registered  
+**How to Fix**:
+- If it's your account, log in instead of registering
+- If you forgot your password, use password reset
+- Use a different email or phone number
+- Contact support if you believe this is an error
+
+**Example**:
+```
+POST /api/auth/register
+Body: { email: "existing@bank.com", ... }
+→ Response: { code: "DUPLICATE_FIELD", field: "email", message: "email already exists" }
+```
+
+### REGISTRATION_ERROR (500)
+
+**Cause**: Server error during registration  
+**User Message**: Registration failed. Please try again later.  
+**How to Fix**:
+- Try registering again in a few moments
+- Check your internet connection
+- Try a different browser
+- Contact support if error continues
+
+### LOGIN_ERROR (500)
+
+**Cause**: Server error during login  
+**User Message**: Login failed. Please try again later.  
+**How to Fix**:
+- Try logging in again
+- Check your internet connection
+- Try a different browser
+- Contact support if error continues
 
 ---
 
-## Validation Error Details
+## Validation Errors
 
-When validation fails (e.g., during registration), the `errors` array includes field-level information:
+### VALIDATION_ERROR (400)
+
+**Cause**: Form field validation failed (common on registration and task creation)  
+**User Message**: Please check the form fields and try again  
+**Field-Level Errors**:
+The response includes an `errors` array with specific failures:
 
 ```json
 {
-  "success": false,
-  "message": "Validation failed",
   "code": "VALIDATION_ERROR",
-  "status": 400,
-  "timestamp": "2024-10-22T15:30:45.123Z",
   "errors": [
     {
       "field": "email",
@@ -128,213 +193,264 @@ When validation fails (e.g., during registration), the `errors` array includes f
     },
     {
       "field": "password",
-      "message": "Password must be at least 8 characters",
-      "value": "pass123"
+      "message": "Password must contain at least 1 uppercase letter",
+      "value": ""
     }
   ]
 }
 ```
 
-Frontend should display these errors under their respective form fields.
+**Common Validation Rules**:
+
+| Field | Rule | Example Error |
+|-------|------|----------------|
+| **First Name** | 2+ characters, required | "First name must be at least 2 characters" |
+| **Last Name** | 2+ characters, required | "Last name must be at least 2 characters" |
+| **Email** | Valid email format, required | "Please enter a valid email address" |
+| **Phone** | 9-15 digits, required | "Please enter a valid phone number (9-15 digits)" |
+| **Password** | 8+ chars, uppercase, lowercase, number, symbol | "Password must contain uppercase, lowercase, number, and symbol" |
+| **Confirm Password** | Must match password | "Passwords do not match" |
+
+**How to Fix**:
+- Read the specific error message for each field
+- Correct the field value according to the rule
+- Re-submit the form
 
 ---
 
-## Common Troubleshooting
+## Email Service Errors
 
-### "Your session has expired" (TOKEN_EXPIRED)
-- **Cause**: JWT token validity period exceeded (default 7 days)
-- **Fix**: Log in again
-- **Note**: There is no automatic token refresh; users must log in again upon expiry
+### EMAIL_DISABLED (503)
 
-### "Invalid email or password" (INVALID_CREDENTIALS)
-- **Cause**: Email and password do not match, or email not registered
-- **Fix**: Check that you entered your email correctly; verify the password is correct
-- **Tip**: If you forgot your password, use the password reset feature (if available)
+**Cause**: Email service not configured or credentials missing  
+**User Message**: Email service is currently unavailable. Notifications cannot be sent.  
+**How to Fix** (Admin):
+1. Check backend `.env` file has EMAIL_USER and EMAIL_PASSWORD set:
+   ```
+   EMAIL_USER=your-gmail@gmail.com
+   EMAIL_PASSWORD=your-16-char-app-password
+   ```
 
-### "Email already registered" (DUPLICATE_FIELD)
-- **Cause**: Account already exists with that email
-- **Fix**: Log in with that email, or use a different email to register a new account
+2. Restart backend server:
+   ```bash
+   npm start
+   ```
 
-### "Validation failed" with field errors (VALIDATION_ERROR)
-- **Cause**: Form data does not meet requirements (invalid format, too short, missing field, etc.)
-- **Fix**: Read the error message for each field and correct your input before resubmitting
+3. Test email service:
+   ```bash
+   curl http://localhost:5000/api/email/check
+   ```
 
-### "Too many requests" (RATE_LIMIT_EXCEEDED)
-- **Cause**: Made more than 10 auth requests in 15 minutes (or 100 general API requests in 15 minutes)
-- **Fix**: Wait 15 minutes, then retry; avoid refreshing rapidly
-- **Prevent**: Don't attempt login/registration more than a few times; ask for help instead
+4. Verify Gmail app password (must use app-specific password, not account password):
+   - Visit: https://myaccount.google.com/apppasswords
+   - Generate new app password for "Mail" on "Windows" (or your platform)
+   - Copy the 16-character password (remove spaces)
+   - Paste into EMAIL_PASSWORD in .env
 
-### "Your account has been deactivated" (ACCOUNT_DEACTIVATED)
-- **Cause**: An administrator disabled your account
-- **Fix**: Contact your administrator or Bunna Bank support
+5. Staff won't receive schedule notifications until this is fixed
 
-### "Network error" (NETWORK_ERROR)
-- **Cause**: Backend is unreachable (no internet, server down, etc.)
-- **Fix**: Check your internet connection; verify the backend is running; try again in a moment
-- **If persists**: Server may be down; contact support
-
-### "An unexpected error occurred" (SERVER_ERROR)
-- **Cause**: Unhandled exception or database error
-- **Fix**: Try again; if the error persists, contact support and include the timestamp shown in the error
-- **For Admins**: Check backend logs (Render dashboard or local server console) for the timestamp to find the root cause
+**Frontend Display**:
+- Dashboard may show banner: "Email notifications are disabled"
+- Schedule notifications won't be sent to assigned staff
+- System continues to function; email is optional
 
 ---
 
-## Development vs. Production Error Responses
+## Rate Limiting
 
-### Development Mode (NODE_ENV=development)
+### RATE_LIMIT_EXCEEDED (429)
 
-Error responses include stack traces and detailed error information:
+**Cause**: Too many requests from this IP in short time period  
+**User Message**: Too many requests. Please wait a few minutes before trying again.  
+**Rate Limits**:
+- Auth endpoints (login, register): 10 requests per 15 minutes per IP
+- General API: 100 requests per 15 minutes per IP
 
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "code": "VALIDATION_ERROR",
-  "status": 400,
-  "error": {
-    "message": "...",
-    "stack": "Error: ...\n    at ...",
-    "name": "ValidationError"
-  }
-}
-```
-
-**Use in:** Local development, debugging, internal testing
-
-### Production Mode (NODE_ENV=production)
-
-Error responses are sanitized; no stack traces or internal details are shown:
-
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "code": "VALIDATION_ERROR",
-  "status": 400,
-  "timestamp": "2024-10-22T15:30:45.123Z"
-}
-```
-
-**Use in:** Render, live deployments, production environments
+**How to Fix**:
+- Wait 15 minutes before trying again
+- Don't retry immediately; wait between attempts
+- Check for automated tools/scripts making duplicate requests
+- If you're behind a proxy/VPN, requests from multiple devices might hit same IP limit
 
 ---
 
-## Deployment Configuration
+## Network & Client Errors
 
-### Setting NODE_ENV on Render
+### NETWORK_ERROR (0)
 
-1. Go to your Render backend service dashboard
-2. Navigate to **Settings** → **Environment**
-3. Add or update the environment variable:
-   - **Key**: `NODE_ENV`
-   - **Value**: `production`
-4. Click **Save**; your service will redeploy
+**Cause**: Cannot connect to server  
+**User Message**: Network error. Please check your connection and try again.  
+**How to Fix**:
+- Check internet connection
+- Verify backend server is running: `npm start`
+- Check backend server port (default 5000): `http://localhost:5000`
+- Check CORS configuration if frontend is on different origin
+- Try accessing from same machine to isolate network vs CORS issue
 
-### Required Environment Variables Checklist
+### REQUEST_ERROR (400)
 
-Before deploying to production, verify all of these are set in your Render backend environment:
-
-- [ ] `PORT` — Server port (default: 5000)
-- [ ] `NODE_ENV` — Set to `production`
-- [ ] `MONGODB_URI` — MongoDB Atlas connection string with credentials
-- [ ] `JWT_SECRET` — Strong random string, minimum 32 characters (generated locally)
-- [ ] `JWT_EXPIRE` — Token expiry (default: `7d`)
-- [ ] `FRONTEND_URL` — HTTPS URL of deployed frontend (for CORS)
-- [ ] `EMAIL_USER` — Gmail app password email
-- [ ] `EMAIL_PASSWORD` — Gmail app password (not your Gmail password)
-- [ ] `EMAIL_FROM` — Display name and email for sent emails
-
-### Email Configuration for Production
-
-If you want staff to receive task notifications in production:
-
-1. Set `EMAIL_USER` and `EMAIL_PASSWORD` in Render environment
-2. On startup, the server will log: ✅ Email service enabled
-3. If these are missing, the server will log: ⚠️ Email service disabled
-4. Check the dashboard for a banner indicating email is down (if implemented)
-
-If email credentials are not configured, task notifications will fail silently. Staff will not receive emails and won't know why. Implement a dashboard banner or add a warning to the admin console.
+**Cause**: Malformed request or invalid data  
+**User Message**: Error processing your request. Please try again.  
+**How to Fix**:
+- Verify all required fields are included
+- Check data types (numbers vs strings)
+- Verify JSON is valid if sending JSON body
+- Check Content-Type header is `application/json`
 
 ---
 
-## Testing Error Scenarios
+## Server Errors
 
-To verify error handling is working:
+### SERVER_ERROR (500)
 
-### Test Rate Limiting
+**Cause**: Unexpected server error  
+**User Message**: Server error. Our team has been notified. Please try again later.  
+**How to Fix**:
+- Try the operation again in a few moments
+- Check server logs for details: `tail -f app.log` (if using logging)
+- Contact backend administrator
+- Check that database is connected: `MongoDB connected successfully`
+
+---
+
+## Troubleshooting Guide
+
+### "Registration failed" with no specific field errors
+
+1. Check browser console for error details
+2. Verify all fields are filled
+3. Check that email follows format: `user@domain.com`
+4. Check that password meets complexity: 8+ chars, uppercase, lowercase, number, symbol
+5. Check browser network tab for actual response from backend
+
+### "Login failed" but credentials seem correct
+
+1. Verify email spelling (case-insensitive but check domain)
+2. Verify password is correct (case-sensitive)
+3. Check caps lock is off
+4. Try copy-pasting password from secure password manager
+5. Try registration with different email if this email is unknown
+
+### "Too many login attempts" error
+
+1. Wait 15 minutes before trying again
+2. Try from different IP/network if available
+3. Don't refresh page repeatedly while waiting
+4. Contact administrator if you continue to see this after waiting
+
+### Email notifications not being sent
+
+1. Check dashboard for email service disabled banner
+2. Admin: verify EMAIL_USER and EMAIL_PASSWORD in .env
+3. Admin: restart backend: `npm start`
+4. Admin: test email service: `curl http://localhost:5000/api/email/check`
+5. Check staff email addresses are valid
+
+### "Session expired" after short time
+
+1. Default token lifespan is 7 days
+2. Log in again to get new token
+3. Check server time is correct (system clock skew can cause premature expiry)
+
+### CORS errors when accessing from frontend
+
+1. Verify backend CORS allows your frontend origin
+2. Check `FRONTEND_URL` environment variable on backend
+3. Check browser console for origin being blocked
+4. For localhost development:
+   - Frontend on http://localhost:3000
+   - Backend CORS should allow this origin
+5. For production (Render):
+   - Verify both frontend and backend URLs match deployed URLs
+
+---
+
+## HTTP Status Codes Reference
+
+| Status | Code | Meaning |
+|--------|------|---------|
+| 200 | OK | Request succeeded |
+| 201 | CREATED | Resource created successfully |
+| 400 | Bad Request | Validation or client error |
+| 401 | Unauthorized | Authentication required or invalid/expired |
+| 403 | Forbidden | Authenticated but not authorized |
+| 404 | Not Found | Resource not found |
+| 409 | Conflict | Duplicate or conflicting resource |
+| 429 | Too Many Requests | Rate limit exceeded |
+| 500 | Server Error | Unexpected server error |
+| 503 | Service Unavailable | Service temporarily unavailable (email disabled) |
+
+---
+
+## For Developers
+
+### Testing Error Scenarios
+
 ```bash
-for i in {1..15}; do curl -X POST http://localhost:5000/api/auth/login -H "Content-Type: application/json" -d '{}'; done
-```
-Should return RATE_LIMIT_EXCEEDED after 10 requests.
+# Test missing token
+curl http://localhost:5000/api/auth/profile
+# Expected: { code: "NO_TOKEN", httpStatus: 401 }
 
-### Test Validation Error
-```bash
+# Test invalid credentials
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"wrong"}'
+# Expected: { code: "INVALID_CREDENTIALS", httpStatus: 401 }
+
+# Test validation error
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"invalid"}'
-```
-Should return VALIDATION_ERROR with field-level errors.
+  -d '{"firstName":"John","email":"invalid"}'
+# Expected: { code: "VALIDATION_ERROR", errors: [...], httpStatus: 400 }
 
-### Test Duplicate Registration
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
+# Test rate limiting (run 11 times rapidly)
+for i in {1..11}; do curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"existing@example.com","password":"Pass123!","firstName":"Test","lastName":"User","phone":"1234567890"}'
+  -d '{"email":"test","password":"test"}'; done
+# Expected on 11th: { code: "RATE_LIMIT_EXCEEDED", httpStatus: 429 }
 ```
-If email already registered, should return DUPLICATE_FIELD.
 
-### Test Invalid Token
-```bash
-curl -X GET http://localhost:5000/api/auth/profile \
-  -H "Authorization: Bearer invalid_token"
-```
-Should return INVALID_TOKEN.
+### Adding New Error Codes
 
-### Test Missing Token
-```bash
-curl -X GET http://localhost:5000/api/auth/profile
-```
-Should return NO_TOKEN.
+1. Add entry to `full-stackauthentication/config/ERROR_CODES.json`
+2. Use same code in all relevant files (controllers, middleware, services)
+3. Frontend can import and use codes from JSON for consistency
+4. Update this documentation with description and fix steps
+
+### Error Code Naming Convention
+
+- Use UPPERCASE_SNAKE_CASE
+- Be specific (e.g., TOKEN_EXPIRED not INVALID_TOKEN)
+- Include error severity in message structure
+- Use consistent codes across codebase
 
 ---
 
-## Security Notes
+## Support & Escalation
 
-- **NoSQL Injection Protection**: All request bodies are sanitized via `express-mongo-sanitize`, which strips `$` and `.` characters. Malicious operators like `{"email":{"$gt":""}}` will not work.
-- **Password Hashing**: All passwords are hashed with bcryptjs before storage and comparison. Plaintext passwords are never logged or returned.
-- **Rate Limiting**: Auth endpoints are strictly limited to prevent brute force attacks. General API is limited to prevent abuse.
-- **CORS**: Only whitelisted frontend URLs can access the API. Cross-origin requests from unknown domains will fail.
-- **Error Messages**: Production error messages don't leak stack traces, file paths, or internal details.
-- **JWT Secret**: The startup log warns if JWT_SECRET is shorter than 32 characters or using the default value. Use a strong random secret in production.
+**For Users**:
+- Check this documentation first
+- Email: support@bunnabank.com
+- Internal IT: ext. 2267834
 
----
+**For Admins**:
+- Check server logs: `tail -f server.log`
+- Check email service config: `curl http://localhost:5000/api/email/check`
+- Check database connection in startup logs
+- Review error code in ERROR_CODES.json for context
 
-## Monitoring & Logging
-
-All errors are logged to the server console with timestamps. In production (Render), check the logs via:
-
-1. Render dashboard → Your service → **Logs**
-2. Search for `ERROR`, `⚠️`, or `💥` to find error entries
-3. Use the timestamp from the error response to locate the corresponding log
-
-**Example log entries:**
-```
-⚠️ WARNING: Email service disabled (no credentials configured)
-💥 Uncaught Exception: Error: listen EADDRINUSE
-[2024-10-22 15:30:45] ERROR Duplicate key error: {email: "test@example.com"}
-```
+**For Developers**:
+- Use ERROR_CODES.json for consistency
+- Log with context (user ID, operation, timestamp)
+- Return appropriate HTTP status code with error code
+- Include field-level errors for validation failures
+- Document new error codes in this file
 
 ---
 
-## Contact & Support
+## Version History
 
-For issues not covered here:
-- **Development**: Check the backend console logs for detailed error messages and stack traces
-- **Production**: Check Render logs; contact support with the error timestamp
-- **Code Issues**: See the error code and stack trace in development logs to debug
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2024-01-15 | Initial documentation; all error codes documented |
 
----
-
-**Last Updated**: October 2024  
-**Error Handling System Version**: 1.0

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import './ThemeToggle.css';
 
 const ThemeToggle = ({ darkMode, setDarkMode }) => {
@@ -26,8 +27,8 @@ const ThemeToggle = ({ darkMode, setDarkMode }) => {
     >
       <div className="toggle-track">
         <div className="toggle-thumb">
-          <span className="sun-icon">☀️</span>
-          <span className="moon-icon">🌙</span>
+          <Sun className="sun-icon" size={18} strokeWidth={2.5} />
+          <Moon className="moon-icon" size={18} strokeWidth={2.5} />
         </div>
       </div>
       <span className="toggle-label">

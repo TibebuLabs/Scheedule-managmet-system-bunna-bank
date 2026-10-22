@@ -1,0 +1,128 @@
+{
+  "VALIDATION_ERROR": {
+    "httpStatus": 400,
+    "code": "VALIDATION_ERROR",
+    "description": "Form field validation failed",
+    "userMessage": "Please check the form fields and try again",
+    "common_causes": ["Missing required fields", "Invalid email format", "Password too weak", "Invalid phone number"]
+  },
+  "MISSING_CREDENTIALS": {
+    "httpStatus": 400,
+    "code": "MISSING_CREDENTIALS",
+    "description": "Email or password not provided",
+    "userMessage": "Please provide both email and password",
+    "common_causes": ["Empty form submission"]
+  },
+  "INVALID_CREDENTIALS": {
+    "httpStatus": 401,
+    "code": "INVALID_CREDENTIALS",
+    "description": "Email or password is incorrect",
+    "userMessage": "Invalid email or password. Please try again.",
+    "common_causes": ["Wrong password", "User doesn't exist", "Typo in email"]
+  },
+  "DUPLICATE_FIELD": {
+    "httpStatus": 409,
+    "code": "DUPLICATE_FIELD",
+    "description": "A record with this value already exists",
+    "userMessage": "This email or phone number is already registered",
+    "common_causes": ["Attempting to register with existing email", "Attempting to register with existing phone"]
+  },
+  "ACCOUNT_DEACTIVATED": {
+    "httpStatus": 403,
+    "code": "ACCOUNT_DEACTIVATED",
+    "description": "User account is deactivated",
+    "userMessage": "Your account has been deactivated. Please contact your administrator.",
+    "common_causes": ["Admin disabled account", "Policy violation", "Account suspended"]
+  },
+  "NO_TOKEN": {
+    "httpStatus": 401,
+    "code": "NO_TOKEN",
+    "description": "Authentication token not provided",
+    "userMessage": "Authentication required. Please log in.",
+    "common_causes": ["Missing Authorization header"]
+  },
+  "INVALID_TOKEN": {
+    "httpStatus": 401,
+    "code": "INVALID_TOKEN",
+    "description": "Authentication token is invalid or malformed",
+    "userMessage": "Your session is invalid. Please log in again.",
+    "common_causes": ["Tampered token", "Corrupted token", "Wrong secret key used"]
+  },
+  "TOKEN_EXPIRED": {
+    "httpStatus": 401,
+    "code": "TOKEN_EXPIRED",
+    "description": "Authentication token has expired",
+    "userMessage": "Your session has expired. Please log in again.",
+    "common_causes": ["Session timeout after 7 days", "Manual token expiration"]
+  },
+  "AUTH_FAILED": {
+    "httpStatus": 401,
+    "code": "AUTH_FAILED",
+    "description": "General authentication failure",
+    "userMessage": "Authentication failed. Please try again.",
+    "common_causes": ["JWT verification failed", "Signature mismatch"]
+  },
+  "AUTH_SERVER_ERROR": {
+    "httpStatus": 500,
+    "code": "AUTH_SERVER_ERROR",
+    "description": "Server error during authentication",
+    "userMessage": "Server error during authentication. Please try again later.",
+    "common_causes": ["Unexpected error in auth middleware"]
+  },
+  "REGISTRATION_ERROR": {
+    "httpStatus": 500,
+    "code": "REGISTRATION_ERROR",
+    "description": "Server error during registration",
+    "userMessage": "Registration failed. Please try again later.",
+    "common_causes": ["Database error", "Unexpected server error"]
+  },
+  "LOGIN_ERROR": {
+    "httpStatus": 500,
+    "code": "LOGIN_ERROR",
+    "description": "Server error during login",
+    "userMessage": "Login failed. Please try again later.",
+    "common_causes": ["Database error", "Unexpected server error"]
+  },
+  "EMAIL_DISABLED": {
+    "httpStatus": 503,
+    "code": "EMAIL_DISABLED",
+    "description": "Email service is not configured or not enabled",
+    "userMessage": "Email service is currently unavailable. Notifications cannot be sent.",
+    "common_causes": ["Missing EMAIL_USER environment variable", "Missing EMAIL_PASSWORD environment variable", "Email service failed verification"]
+  },
+  "RATE_LIMIT_EXCEEDED": {
+    "httpStatus": 429,
+    "code": "RATE_LIMIT_EXCEEDED",
+    "description": "Too many requests from this IP",
+    "userMessage": "Too many requests. Please wait a few minutes before trying again.",
+    "common_causes": ["Too many login attempts", "Rapid API calls", "Brute force attempt"]
+  },
+  "USER_NOT_FOUND": {
+    "httpStatus": 404,
+    "code": "USER_NOT_FOUND",
+    "description": "User record not found",
+    "userMessage": "User not found.",
+    "common_causes": ["Invalid user ID", "User deleted"]
+  },
+  "NETWORK_ERROR": {
+    "httpStatus": 0,
+    "code": "NETWORK_ERROR",
+    "description": "Network connection error",
+    "userMessage": "Network error. Please check your connection and try again.",
+    "common_causes": ["No internet connection", "Server unreachable", "Timeout"]
+  },
+  "REQUEST_ERROR": {
+    "httpStatus": 400,
+    "code": "REQUEST_ERROR",
+    "description": "Error processing the request",
+    "userMessage": "Error processing your request. Please try again.",
+    "common_causes": ["Malformed request", "Invalid data type", "Missing request body"]
+  },
+  "SERVER_ERROR": {
+    "httpStatus": 500,
+    "code": "SERVER_ERROR",
+    "description": "Unhandled server error",
+    "userMessage": "Server error. Our team has been notified. Please try again later.",
+    "common_causes": ["Unexpected error", "Unhandled exception"]
+  }
+}

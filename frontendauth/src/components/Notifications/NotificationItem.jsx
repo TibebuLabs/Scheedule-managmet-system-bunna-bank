@@ -1,14 +1,16 @@
 import React from 'react';
+import { Clipboard, Users, RotateCcw, User, Bell } from 'lucide-react';
 import './NotificationItem.css';
 
 const NotificationItem = ({ notification, markNotificationAsRead, deleteNotification }) => {
   const getTypeIcon = (type) => {
+    const iconProps = { size: 20, strokeWidth: 2 };
     switch (type) {
-      case 'task': return '📋';
-      case 'meeting': return '👥';
-      case 'shift': return '🔄';
-      case 'staff': return '👤';
-      default: return '🔔';
+      case 'task': return <Clipboard {...iconProps} />;
+      case 'meeting': return <Users {...iconProps} />;
+      case 'shift': return <RotateCcw {...iconProps} />;
+      case 'staff': return <User {...iconProps} />;
+      default: return <Bell {...iconProps} />;
     }
   };
 

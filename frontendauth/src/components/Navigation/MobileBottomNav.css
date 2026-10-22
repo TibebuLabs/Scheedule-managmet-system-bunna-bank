@@ -1,0 +1,195 @@
+/* Mobile Bottom Navigation Styles */
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+  width: 100%;
+  /* Support for iOS notch/safe areas */
+  padding-top: 4px;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .mobile-bottom-nav,
+body.dark-theme .mobile-bottom-nav {
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  border-top-color: #374151;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.nav-tabs {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-height: 44px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.nav-icon {
+  color: #6b7280;
+  transition: all 0.2s ease;
+  stroke-width: 2;
+}
+
+.nav-tab:hover .nav-icon {
+  color: #374151;
+}
+
+/* Active tab state */
+.nav-tab.active .nav-icon {
+  color: #3d1209;
+  filter: drop-shadow(0 0 2px rgba(61, 18, 9, 0.2));
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1;
+  text-align: center;
+  transition: all 0.2s ease;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.nav-tab.active .nav-label {
+  color: #3d1209;
+  font-weight: 600;
+}
+
+/* Active indicator bar */
+.nav-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  background: linear-gradient(90deg, #3d1209 0%, #f59e0b 100%);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 -2px 4px rgba(245, 158, 11, 0.2);
+}
+
+/* Dark mode indicator */
+[data-theme='dark'] .nav-indicator,
+body.dark-theme .nav-indicator {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 -2px 4px rgba(245, 158, 11, 0.3);
+}
+
+/* Ripple effect on tap */
+.nav-tab::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(61, 18, 9, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.nav-tab:active::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Optimize for small screens */
+@media (max-width: 380px) {
+  .nav-label {
+    font-size: 10px;
+  }
+
+  .nav-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nav-icon {
+    stroke-width: 2.2;
+  }
+}
+
+/* Tablet and up - hide the nav (handled by parent) */
+@media (min-width: 1024px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
+/* Safe area support for devices with notches */
+@supports (padding: max(0px)) {
+  .mobile-bottom-nav {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Prevent nav from overlapping content */
+.mobile-bottom-nav + * {
+  margin-bottom: 72px;
+}
+
+/* Smooth transitions for active state changes */
+.nav-tab {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.nav-icon {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+/* Focus state for accessibility */
+.nav-tab:focus-visible {
+  outline: 2px solid #3d1209;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* Ensure full width on all devices */
+.mobile-bottom-nav {
+  width: 100vw;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}

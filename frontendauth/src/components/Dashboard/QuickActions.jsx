@@ -1,40 +1,41 @@
 import React from 'react';
+import { User, Clipboard, Calendar, BarChart3, Megaphone, Building2, Zap, RotateCcw } from 'lucide-react';
 import './QuickActions.css';
 
 const QuickActions = ({ onAddStaff, onAddTask, onViewSchedule, onViewReports }) => {
   const actions = [
     {
-      icon: '👤',
+      icon: <User size={24} strokeWidth={2} />,
       label: 'Add New Staff',
       color: 'primary',
       action: onAddStaff
     },
     {
-      icon: '📋',
+      icon: <Clipboard size={24} strokeWidth={2} />,
       label: 'Create Task',
       color: 'success',
       action: onAddTask
     },
     {
-      icon: '📅',
+      icon: <Calendar size={24} strokeWidth={2} />,
       label: 'Schedule Shift',
       color: 'warning',
       action: onViewSchedule
     },
     {
-      icon: '📊',
+      icon: <BarChart3 size={24} strokeWidth={2} />,
       label: 'Generate Report',
       color: 'info',
       action: onViewReports
     },
     {
-      icon: '📢',
+      icon: <Megaphone size={24} strokeWidth={2} />,
       label: 'Send Announcement',
       color: 'primary',
       action: () => {}
     },
     {
-      icon: '🏢',
+      icon: <Building2 size={24} strokeWidth={2} />,
       label: 'Manage Departments',
       color: 'success',
       action: () => {}
@@ -68,14 +69,14 @@ const QuickActions = ({ onAddStaff, onAddTask, onViewSchedule, onViewReports }) 
       
       <div className="quick-actions-footer">
         <div className="recent-activity">
-          <span className="activity-icon">⚡</span>
+          <Zap className="activity-icon" size={18} strokeWidth={2} />
           <div className="activity-text">
             <span className="activity-title">Recent Activity</span>
             <span className="activity-subtitle">3 new updates</span>
           </div>
         </div>
         <button className="refresh-button">
-          <span>🔄</span>
+          <RotateCcw size={18} strokeWidth={2} />
         </button>
       </div>
     </div>

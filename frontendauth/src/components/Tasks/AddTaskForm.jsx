@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   FileText, BookOpen, AlertCircle, CheckCircle, 
   XCircle, Loader2, ArrowLeft, Plus, Check,
-  X, Info, Star, Award, Clock
+  X, Info, Star, Award, Clock, Eye
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -465,7 +465,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                   onClick={handleCloseModal}
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3d1209] to-amber-600 hover:from-[#4d170c] hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 >
-                  <span className="text-lg">👁️</span>
+                  <Eye size={20} strokeWidth={2} />
                   View All Tasks
                 </button>
               </div>

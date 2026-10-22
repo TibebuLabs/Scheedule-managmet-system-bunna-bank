@@ -163,6 +163,7 @@ body.dark-theme .nav-indicator {
     display: none;
   }
 }
+/* Desktop threshold: 1024px matches isMobile breakpoint in Dashboard.jsx */
 
 /* Safe area support for devices with notches */
 @supports (padding: max(0px)) {
@@ -194,10 +195,10 @@ body.dark-theme .nav-indicator {
 
 /* Ensure full width on all devices */
 .mobile-bottom-nav {
-  width: 100vw;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
+  width: 100%;
+  left: 0;
+  right: 0;
+  transform: none;
 }
 
 /* Spacer element to prevent content overlap with fixed nav */

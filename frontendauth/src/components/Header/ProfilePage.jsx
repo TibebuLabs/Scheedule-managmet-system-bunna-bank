@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import {
+  User,
+  Camera,
+  Edit2,
+  CheckCircle2,
+  ClipboardList,
+  BarChart3,
+  Zap,
+  TrendingUp,
+  MapPin,
+  X
+} from 'lucide-react';
 import './Pages.css';
 
 const ProfilePage = ({ user, onUpdateProfile }) => {
@@ -79,7 +91,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
   return (
     <div className="page-container profile-page">
       <div className="page-header">
-        <h1>👤 User Profile</h1>
+        <h1><User size={28} className="inline mr-2" style={{ strokeWidth: 1.5 }} />User Profile</h1>
         <p>Manage your personal information and preferences</p>
       </div>
 
@@ -105,13 +117,13 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
 
             <div className="profile-actions">
               <button className="btn-secondary">
-                <span>📸</span> Change Photo
+                <Camera size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Change Photo
               </button>
               <button 
                 className="btn-primary"
                 onClick={() => setIsEditing(!isEditing)}
               >
-                <span>✏️</span> {isEditing ? 'Cancel Edit' : 'Edit Profile'}
+                <Edit2 size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> {isEditing ? 'Cancel Edit' : 'Edit Profile'}
               </button>
             </div>
           </div>
@@ -120,7 +132,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                <span>✅</span>
+                <CheckCircle2 size={24} className="inline" style={{ strokeWidth: 1.5, color: 'white' }} />
               </div>
               <div className="stat-info">
                 <h3>{stats.tasksCompleted}</h3>
@@ -129,7 +141,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
             </div>
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
-                <span>📋</span>
+                <ClipboardList size={24} className="inline" style={{ strokeWidth: 1.5, color: 'white' }} />
               </div>
               <div className="stat-info">
                 <h3>{stats.tasksAssigned}</h3>
@@ -138,7 +150,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
             </div>
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
-                <span>📊</span>
+                <BarChart3 size={24} className="inline" style={{ strokeWidth: 1.5, color: 'white' }} />
               </div>
               <div className="stat-info">
                 <h3>{stats.efficiencyRate}</h3>
@@ -147,7 +159,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
             </div>
             <div className="stat-card">
               <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
-                <span>⚡</span>
+                <Zap size={24} className="inline" style={{ strokeWidth: 1.5, color: 'white' }} />
               </div>
               <div className="stat-info">
                 <h3>{stats.avgResponseTime}</h3>
@@ -293,10 +305,10 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
             {isEditing && (
               <div className="form-actions">
                 <button className="btn-primary" onClick={handleSave}>
-                  💾 Save Changes
+                  Save Changes
                 </button>
                 <button className="btn-secondary" onClick={() => setIsEditing(false)}>
-                  ❌ Cancel
+                  <X size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Cancel
                 </button>
               </div>
             )}
@@ -304,12 +316,12 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
 
           {/* Recent Activities */}
           <div className="recent-activities">
-            <h3>📈 Recent Activities</h3>
+            <h3><TrendingUp size={20} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Recent Activities</h3>
             <div className="activities-list">
               {recentActivities.map(activity => (
                 <div key={activity.id} className="activity-item">
                   <div className="activity-icon">
-                    <span>📌</span>
+                    <MapPin size={16} className="inline" style={{ strokeWidth: 1.5 }} />
                   </div>
                   <div className="activity-details">
                     <p className="activity-action">

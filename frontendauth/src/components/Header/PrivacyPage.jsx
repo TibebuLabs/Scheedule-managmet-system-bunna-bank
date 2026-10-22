@@ -1,4 +1,20 @@
 import React, { useState } from 'react';
+import {
+  Shield,
+  User,
+  Users,
+  Globe,
+  Lock,
+  BarChart3,
+  ClipboardList,
+  Download,
+  Eye,
+  Edit2,
+  Trash2,
+  FileText,
+  RotateCcw,
+  Database
+} from 'lucide-react';
 import './Pages.css';
 
 const PrivacyPage = ({ user }) => {
@@ -42,14 +58,14 @@ const PrivacyPage = ({ user }) => {
   return (
     <div className="page-container privacy-page">
       <div className="page-header">
-        <h1>🛡️ Privacy & Data</h1>
+        <h1><Shield size={28} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Privacy & Data</h1>
         <p>Control your privacy and data sharing preferences</p>
       </div>
 
       <div className="privacy-content">
         {/* Profile Privacy */}
         <div className="privacy-section">
-          <h2>👤 Profile Privacy</h2>
+          <h2><User size={22} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Profile Privacy</h2>
           <p className="section-description">Control who can see your profile information</p>
           
           <div className="privacy-option">
@@ -68,9 +84,9 @@ const PrivacyPage = ({ user }) => {
                     onChange={() => handleVisibilityChange(option)}
                   />
                   <span className="radio-label">
-                    {option === 'public' && '🌍 Public'}
-                    {option === 'team' && '👥 Team Only'}
-                    {option === 'private' && '🔒 Private'}
+                    {option === 'public' && <><Globe size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> Public</>}
+                    {option === 'team' && <><Users size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> Team Only</>}
+                    {option === 'private' && <><Lock size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> Private</>}
                   </span>
                 </label>
               ))}
@@ -145,7 +161,7 @@ const PrivacyPage = ({ user }) => {
 
         {/* Data & Tracking */}
         <div className="privacy-section">
-          <h2>📊 Data & Tracking</h2>
+          <h2><BarChart3 size={22} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Data & Tracking</h2>
           <p className="section-description">Control how your data is collected and used</p>
           
           <div className="privacy-options-grid">
@@ -213,12 +229,12 @@ const PrivacyPage = ({ user }) => {
 
         {/* Data Rights */}
         <div className="privacy-section">
-          <h2>📋 Your Data Rights</h2>
+          <h2><ClipboardList size={22} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Your Data Rights</h2>
           <p className="section-description">Exercise your data protection rights</p>
           
           <div className="data-rights-grid">
             <div className="data-right-card">
-              <div className="right-icon">📥</div>
+              <div className="right-icon"><Download size={32} style={{ strokeWidth: 1.5 }} /></div>
               <div className="right-info">
                 <h4>Export Data</h4>
                 <p>Download a copy of all your data</p>
@@ -229,7 +245,7 @@ const PrivacyPage = ({ user }) => {
             </div>
 
             <div className="data-right-card">
-              <div className="right-icon">👁️</div>
+              <div className="right-icon"><Eye size={32} style={{ strokeWidth: 1.5 }} /></div>
               <div className="right-info">
                 <h4>View Data</h4>
                 <p>See what data we have about you</p>
@@ -240,7 +256,7 @@ const PrivacyPage = ({ user }) => {
             </div>
 
             <div className="data-right-card">
-              <div className="right-icon">✏️</div>
+              <div className="right-icon"><Edit2 size={32} style={{ strokeWidth: 1.5 }} /></div>
               <div className="right-info">
                 <h4>Correct Data</h4>
                 <p>Request correction of inaccurate data</p>
@@ -251,7 +267,7 @@ const PrivacyPage = ({ user }) => {
             </div>
 
             <div className="data-right-card">
-              <div className="right-icon">🗑️</div>
+              <div className="right-icon"><Trash2 size={32} style={{ strokeWidth: 1.5 }} /></div>
               <div className="right-info">
                 <h4>Delete Data</h4>
                 <p>Request deletion of your data</p>
@@ -265,7 +281,7 @@ const PrivacyPage = ({ user }) => {
 
         {/* Privacy Policy */}
         <div className="privacy-section">
-          <h2>📜 Privacy Policy</h2>
+          <h2><FileText size={22} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Privacy Policy</h2>
           <div className="privacy-policy-content">
             <p>
               We take your privacy seriously. Here's a summary of our privacy practices:
@@ -279,13 +295,13 @@ const PrivacyPage = ({ user }) => {
             </ul>
             <div className="policy-links">
               <button className="btn-text">
-                📄 View Full Privacy Policy
+                <FileText size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> View Full Privacy Policy
               </button>
               <button className="btn-text">
-                📄 Terms of Service
+                <FileText size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> Terms of Service
               </button>
               <button className="btn-text">
-                📄 Cookie Policy
+                <FileText size={16} className="inline mr-1" style={{ strokeWidth: 1.5 }} /> Cookie Policy
               </button>
             </div>
           </div>
@@ -293,10 +309,10 @@ const PrivacyPage = ({ user }) => {
 
         <div className="privacy-actions">
           <button className="btn-primary">
-            💾 Save Privacy Settings
+            <Database size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Save Privacy Settings
           </button>
           <button className="btn-secondary">
-            ↩️ Restore Defaults
+            <RotateCcw size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Restore Defaults
           </button>
         </div>
       </div>

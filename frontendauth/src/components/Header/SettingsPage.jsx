@@ -1,4 +1,15 @@
 import React, { useState } from 'react';
+import {
+  Bell,
+  Settings as SettingsIcon,
+  Shield,
+  Lock,
+  Palette,
+  HardDrive,
+  Download,
+  Trash2,
+  RotateCcw
+} from 'lucide-react';
 import './Pages.css';
 
 const SettingsPage = ({ user }) => {
@@ -46,7 +57,7 @@ const SettingsPage = ({ user }) => {
   return (
     <div className="page-container settings-page">
       <div className="page-header">
-        <h1>⚙️ Settings</h1>
+        <h1><SettingsIcon size={28} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Settings</h1>
         <p>Customize your application experience</p>
       </div>
 
@@ -54,7 +65,7 @@ const SettingsPage = ({ user }) => {
         {/* Notification Settings */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <h2>🔔 Notifications</h2>
+            <h2><Bell size={24} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Notifications</h2>
             <p>Manage how you receive notifications</p>
           </div>
           <div className="settings-options">
@@ -123,7 +134,7 @@ const SettingsPage = ({ user }) => {
         {/* Security Settings */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <h2>🛡️ Security</h2>
+            <h2><Shield size={24} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Security</h2>
             <p>Manage your account security</p>
           </div>
           
@@ -165,7 +176,7 @@ const SettingsPage = ({ user }) => {
               />
             </div>
             <button className="btn-primary" onClick={handlePasswordChange}>
-              🔒 Update Password
+              <Lock size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Update Password
             </button>
           </div>
         </div>
@@ -173,7 +184,7 @@ const SettingsPage = ({ user }) => {
         {/* Preferences */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <h2>🎨 Preferences</h2>
+            <h2><Palette size={24} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Preferences</h2>
             <p>Customize your experience</p>
           </div>
 
@@ -233,16 +244,16 @@ const SettingsPage = ({ user }) => {
         {/* Data Management */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <h2>💾 Data Management</h2>
+            <h2><HardDrive size={24} className="inline mr-2" style={{ strokeWidth: 1.5 }} />Data Management</h2>
             <p>Manage your application data</p>
           </div>
           
           <div className="data-options">
             <button className="btn-secondary" onClick={handleExportData}>
-              📥 Export All Data
+              <Download size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Export All Data
             </button>
             <button className="btn-secondary warning">
-              🗑️ Delete Account
+              <Trash2 size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Delete Account
             </button>
             <div className="storage-info">
               <div className="storage-bar">
@@ -256,10 +267,10 @@ const SettingsPage = ({ user }) => {
 
       <div className="settings-actions">
         <button className="btn-primary">
-          💾 Save All Settings
+          <HardDrive size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Save All Settings
         </button>
         <button className="btn-secondary">
-          ↩️ Reset to Default
+          <RotateCcw size={16} className="inline mr-2" style={{ strokeWidth: 1.5 }} /> Reset to Default
         </button>
       </div>
     </div>

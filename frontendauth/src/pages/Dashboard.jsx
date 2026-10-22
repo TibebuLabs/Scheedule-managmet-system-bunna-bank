@@ -743,7 +743,7 @@ const Dashboard = () => {
           setMobileMenuOpen={setMobileMenuOpen}
         />
 
-        <main className="p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-68px)]">
+        <main className="p-4 sm:p-6 lg:p-8 pb-[72px] md:pb-0 min-h-[calc(100vh-68px)]">
           <div className="max-w-7xl mx-auto animate-fade-in">
             {renderContent()}
           </div>
@@ -752,8 +752,6 @@ const Dashboard = () => {
 
       {/* Mobile Bottom Navigation Bar */}
       {isMobile && <MobileBottomNav activeMenu={activeMenu} setActiveMenu={setActiveMenu} />}
-      {/* Add padding when mobile nav is shown */}
-      {isMobile && <div style={{ height: '72px' }} />}
     </div>
   );
 };

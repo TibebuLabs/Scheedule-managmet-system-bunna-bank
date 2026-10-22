@@ -182,7 +182,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
         phone: formattedPhone
       };
       
-      console.log('📤 Sending payload:', payload);
+      console.log('Sending payload:', payload);
       
       const response = await axios.post(`${API_BASE_URL}/staff/add`, payload, {
         headers: {
@@ -190,7 +190,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
         }
       });
       
-      console.log('✅ Employee added:', response.data);
+      console.log('Employee added:', response.data);
       setSuccess(response.data.message || 'Staff member added successfully!');
       
       // Reset form
@@ -213,7 +213,7 @@ const AddStaffForm = ({ onCancel, onStaffAdded, darkMode }) => {
       setTimeout(() => setSuccess(''), 5000);
       
     } catch (error) {
-      console.error('❌ Error adding staff:', error);
+      console.error('Error adding staff:', error);
       
       if (error.response) {
         console.log('Server response:', error.response.data);

@@ -1,11 +1,15 @@
 /* Mobile Bottom Navigation Styles */
 
+:root {
+  --mobile-nav-height: 72px;
+}
+
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 72px;
+  height: var(--mobile-nav-height);
   background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
   border-top: 1px solid #e5e7eb;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
@@ -139,6 +143,8 @@ body.dark-theme .nav-indicator {
 @media (max-width: 380px) {
   .nav-label {
     font-size: 10px;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .nav-icon-wrapper {
@@ -192,4 +198,9 @@ body.dark-theme .nav-indicator {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
+}
+
+/* Spacer element to prevent content overlap with fixed nav */
+.mobile-nav-spacer {
+  height: var(--mobile-nav-height);
 }

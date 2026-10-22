@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   FileText, BookOpen, AlertCircle, CheckCircle, 
   XCircle, Loader2, ArrowLeft, Plus, Check,
-  X, Info, Star, Award, Clock, Eye
+  X, Info, Star, Award, Clock, Eye, Sparkles
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -85,7 +85,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
       });
       
       if (response.data.success) {
-        console.log('✅ Task created:', response.data.task);
+        console.log('Task created:', response.data.task);
         
         setCreatedTask(response.data.task);
         setFormData({ title: '', description: '' });
@@ -98,7 +98,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
       }
       
     } catch (error) {
-      console.error('❌ Error creating task:', error);
+      console.error('Error creating task:', error);
       
       if (error.response) {
         if (error.response.data.errors) {
@@ -402,7 +402,7 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
                   <Check className="w-12 h-12 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-[#3d1209] to-amber-600 bg-clip-text text-transparent">
-                  Task Created Successfully! 🎉
+                  Task Created Successfully!
                 </h3>
                 <p className="text-gray-600 mt-2">
                   Your new task has been added to the system
@@ -449,7 +449,8 @@ const AddTaskForm = ({ onCancel, staffMembers, darkMode, onTaskAdded }) => {
               
               <div className="bg-gradient-to-r from-[#3d1209]/5 to-amber-500/5 border border-[#e6d7cf] rounded-2xl p-4 mb-6 text-center">
                 <p className="text-sm text-gray-700">
-                  <span className="font-bold text-[#3d1209]">✨ Great job!</span> The task has been saved to the database.
+                  <Sparkles size={16} strokeWidth={2} className="inline mr-1 text-amber-500" />
+                  <span className="font-bold text-[#3d1209]">Great job!</span> The task has been saved to the database.
                 </p>
               </div>
               

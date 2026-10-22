@@ -142,6 +142,14 @@ apiClient.interceptors.response.use(
         status,
       };
       
+      // Show validation errors if available
+      if (data.errors && Array.isArray(data.errors)) {
+        const errorMessages = data.errors.map(e => `${e.field}: ${e.message}`).join('\n');
+        toast.error(`Validation Error:\n${errorMessages}`);
+      } else if (data.message) {
+        toast.error(data.message);
+      }
+      
       return Promise.reject(normalizedError);
     } 
     

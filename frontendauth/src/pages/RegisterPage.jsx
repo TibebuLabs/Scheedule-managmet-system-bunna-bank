@@ -86,16 +86,8 @@ const RegisterPage = () => {
     if (!cleanPhone || cleanPhone.length < 9) {
       newErrors.phone = 'Enter a valid phone number (min 9 digits)';
     }
-    if (!formData.password || formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = 'Must include at least one uppercase letter';
-    } else if (!/[a-z]/.test(formData.password)) {
-      newErrors.password = 'Must include at least one lowercase letter';
-    } else if (!/[0-9]/.test(formData.password)) {
-      newErrors.password = 'Must include at least one number';
-    } else if (!/[^A-Za-z0-9]/.test(formData.password)) {
-      newErrors.password = 'Must include at least one special character';
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';

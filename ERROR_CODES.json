@@ -1,0 +1,361 @@
+{
+  "authentication": {
+    "MISSING_CREDENTIALS": {
+      "status": 400,
+      "message": "Please provide email and password",
+      "userMessage": "Email and password are required",
+      "category": "validation",
+      "action": "Provide both email and password"
+    },
+    "INVALID_CREDENTIALS": {
+      "status": 401,
+      "message": "Invalid email or password",
+      "userMessage": "Invalid email or password",
+      "category": "auth",
+      "action": "Check your email and password and try again"
+    },
+    "DUPLICATE_FIELD": {
+      "status": 409,
+      "message": "Field already exists",
+      "userMessage": "This email is already registered",
+      "category": "conflict",
+      "action": "Use a different email or log in with existing account"
+    },
+    "ACCOUNT_DEACTIVATED": {
+      "status": 403,
+      "message": "Account is deactivated",
+      "userMessage": "Your account has been deactivated. Please contact administrator.",
+      "category": "auth",
+      "action": "Contact your administrator"
+    },
+    "NO_TOKEN": {
+      "status": 401,
+      "message": "No authorization token provided",
+      "userMessage": "You are not logged in",
+      "category": "auth",
+      "action": "Log in to continue"
+    },
+    "TOKEN_EXPIRED": {
+      "status": 401,
+      "message": "Token has expired",
+      "userMessage": "Your session has expired. Please log in again.",
+      "category": "auth",
+      "action": "Log in again"
+    },
+    "INVALID_TOKEN": {
+      "status": 401,
+      "message": "Invalid or malformed token",
+      "userMessage": "Invalid authentication token. Please log in again.",
+      "category": "auth",
+      "action": "Log in again"
+    },
+    "AUTH_FAILED": {
+      "status": 401,
+      "message": "Authentication failed",
+      "userMessage": "Authentication failed. Please log in again.",
+      "category": "auth",
+      "action": "Log in again"
+    },
+    "AUTH_SERVER_ERROR": {
+      "status": 500,
+      "message": "Server error in authentication",
+      "userMessage": "An error occurred. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "USER_NOT_FOUND": {
+      "status": 404,
+      "message": "User not found",
+      "userMessage": "User account not found",
+      "category": "notfound",
+      "action": "Log in again or contact support"
+    },
+    "REGISTRATION_ERROR": {
+      "status": 500,
+      "message": "Registration failed",
+      "userMessage": "Registration failed. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "LOGIN_ERROR": {
+      "status": 500,
+      "message": "Login failed",
+      "userMessage": "Login failed. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    }
+  },
+  "validation": {
+    "VALIDATION_ERROR": {
+      "status": 400,
+      "message": "Validation failed",
+      "userMessage": "Please check the form fields and try again",
+      "category": "validation",
+      "action": "Fix the highlighted errors and resubmit"
+    },
+    "INVALID_ID": {
+      "status": 400,
+      "message": "Invalid ID format",
+      "userMessage": "Invalid ID format",
+      "category": "validation",
+      "action": "Provide a valid ID"
+    }
+  },
+  "rate_limiting": {
+    "RATE_LIMIT_EXCEEDED": {
+      "status": 429,
+      "message": "Too many requests, please try again later.",
+      "userMessage": "Too many attempts. Please wait a few minutes and try again.",
+      "category": "ratelimit",
+      "action": "Wait 15 minutes before trying again",
+      "limits": {
+        "auth": "10 requests per 15 minutes",
+        "general": "100 requests per 15 minutes",
+        "email": "Limited per 15 minutes"
+      }
+    },
+    "EMAIL_RATE_LIMIT_EXCEEDED": {
+      "status": 429,
+      "message": "Too many email requests",
+      "userMessage": "Too many email requests. Please try again later.",
+      "category": "ratelimit",
+      "action": "Wait 15 minutes before trying again"
+    }
+  },
+  "tasks": {
+    "TASK_NOT_FOUND": {
+      "status": 404,
+      "message": "Task not found",
+      "userMessage": "The task you are looking for does not exist",
+      "category": "notfound",
+      "action": "Verify the task ID and try again"
+    }
+  },
+  "staff": {
+    "STAFF_NOT_FOUND": {
+      "status": 404,
+      "message": "Staff member not found",
+      "userMessage": "The staff member you are looking for does not exist",
+      "category": "notfound",
+      "action": "Verify the staff ID and try again"
+    }
+  },
+  "schedules": {
+    "SCHEDULE_NOT_FOUND": {
+      "status": 404,
+      "message": "Schedule not found",
+      "userMessage": "The schedule you are looking for does not exist",
+      "category": "notfound",
+      "action": "Verify the schedule ID and try again"
+    },
+    "MISSING_DATE_PARAMS": {
+      "status": 400,
+      "message": "Start date and end date are required",
+      "userMessage": "Please provide both start and end dates",
+      "category": "validation",
+      "action": "Provide both date range parameters"
+    },
+    "MISSING_DATE": {
+      "status": 400,
+      "message": "Date is required",
+      "userMessage": "Please provide a date",
+      "category": "validation",
+      "action": "Provide a date value"
+    },
+    "MISSING_STATUS": {
+      "status": 400,
+      "message": "Status is required",
+      "userMessage": "Please provide a status",
+      "category": "validation",
+      "action": "Provide a valid status"
+    },
+    "MISSING_SEARCH_QUERY": {
+      "status": 400,
+      "message": "Search query is required",
+      "userMessage": "Please provide a search query",
+      "category": "validation",
+      "action": "Provide a search term"
+    },
+    "MISSING_PARAMS": {
+      "status": 400,
+      "message": "Required parameters missing",
+      "userMessage": "Please provide all required information",
+      "category": "validation",
+      "action": "Check the form and provide missing fields"
+    },
+    "INVALID_REQUEST": {
+      "status": 400,
+      "message": "Invalid request",
+      "userMessage": "Invalid request format",
+      "category": "validation",
+      "action": "Check your request and try again"
+    },
+    "FETCH_SCHEDULES_ERROR": {
+      "status": 500,
+      "message": "Failed to fetch schedules",
+      "userMessage": "Failed to load schedules. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_UPCOMING_ERROR": {
+      "status": 500,
+      "message": "Failed to fetch upcoming schedules",
+      "userMessage": "Failed to load upcoming schedules. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_SCHEDULE_ERROR": {
+      "status": 500,
+      "message": "Failed to fetch schedule",
+      "userMessage": "Failed to load schedule. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "UPDATE_SCHEDULE_ERROR": {
+      "status": 500,
+      "message": "Failed to update schedule",
+      "userMessage": "Failed to update schedule. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "UPDATE_STATUS_ERROR": {
+      "status": 500,
+      "message": "Failed to update schedule status",
+      "userMessage": "Failed to update status. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "DELETE_SCHEDULE_ERROR": {
+      "status": 500,
+      "message": "Failed to delete schedule",
+      "userMessage": "Failed to delete schedule. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_WORKLOAD_ERROR": {
+      "status": 500,
+      "message": "Failed to get staff workload",
+      "userMessage": "Failed to load staff workload. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "CHECK_AVAILABILITY_ERROR": {
+      "status": 500,
+      "message": "Failed to check date availability",
+      "userMessage": "Failed to check availability. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "GENERATE_REPORT_ERROR": {
+      "status": 500,
+      "message": "Failed to generate report",
+      "userMessage": "Failed to generate report. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_STATISTICS_ERROR": {
+      "status": 500,
+      "message": "Failed to get schedule statistics",
+      "userMessage": "Failed to load statistics. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_RECOMMENDATIONS_ERROR": {
+      "status": 500,
+      "message": "Failed to get recommended times",
+      "userMessage": "Failed to get recommendations. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "BULK_CREATE_ERROR": {
+      "status": 500,
+      "message": "Failed to create bulk schedules",
+      "userMessage": "Failed to create schedules. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_STAFF_SCHEDULES_ERROR": {
+      "status": 500,
+      "message": "Failed to get staff schedules",
+      "userMessage": "Failed to load staff schedules. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_CALENDAR_ERROR": {
+      "status": 500,
+      "message": "Failed to get calendar view",
+      "userMessage": "Failed to load calendar. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "SEARCH_ERROR": {
+      "status": 500,
+      "message": "Failed to search schedules",
+      "userMessage": "Search failed. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "FETCH_WEEKLY_SCHEDULE_ERROR": {
+      "status": 500,
+      "message": "Failed to get staff weekly schedule",
+      "userMessage": "Failed to load weekly schedule. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "CHECK_CONSECUTIVE_ERROR": {
+      "status": 500,
+      "message": "Failed to check consecutive week restriction",
+      "userMessage": "Failed to check restrictions. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    },
+    "UPDATE_ASSIGNMENT_ERROR": {
+      "status": 500,
+      "message": "Failed to update assignment status",
+      "userMessage": "Failed to update assignment. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support"
+    }
+  },
+  "email": {
+    "EMAIL_DISABLED": {
+      "status": 503,
+      "message": "Email service is not configured",
+      "userMessage": "Email notifications are temporarily unavailable",
+      "category": "service",
+      "action": "Email notifications will be restored when service is configured"
+    }
+  },
+  "server": {
+    "SERVER_ERROR": {
+      "status": 500,
+      "message": "An unexpected error occurred",
+      "userMessage": "An unexpected error occurred. Please try again.",
+      "category": "server",
+      "action": "Try again or contact support with the error timestamp"
+    },
+    "DUPLICATE_ERROR": {
+      "status": 409,
+      "message": "Duplicate entry detected",
+      "userMessage": "This entry already exists",
+      "category": "conflict",
+      "action": "Use a unique value and try again"
+    }
+  },
+  "network": {
+    "NETWORK_ERROR": {
+      "status": null,
+      "message": "Network error",
+      "userMessage": "Network error. Please check your connection.",
+      "category": "network",
+      "action": "Check your internet connection and try again"
+    },
+    "REQUEST_ERROR": {
+      "status": null,
+      "message": "Request setup failed",
+      "userMessage": "Request failed. Please try again.",
+      "category": "network",
+      "action": "Try again or contact support"
+    }
+  }
+}

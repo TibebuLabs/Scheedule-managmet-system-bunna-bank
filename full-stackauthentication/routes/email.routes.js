@@ -23,6 +23,9 @@ router.get('/test', emailController.testEmail);
 // Check email connection
 router.get('/check', emailController.checkConnection);
 
+// Get email service status for dashboard
+router.get('/status', emailController.getStatus);
+
 // Get email statistics
 router.get('/stats', emailController.getEmailStats);
 

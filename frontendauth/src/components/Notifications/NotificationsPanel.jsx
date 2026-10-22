@@ -1,4 +1,5 @@
 import React from 'react';
+import { Bell, Settings } from 'lucide-react';
 import NotificationItem from './NotificationItem';
 import './NotificationsPanel.css';
 
@@ -41,7 +42,7 @@ const NotificationsPanel = ({ notifications, markNotificationAsRead, deleteNotif
       <div className="notifications-list">
         {notifications.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🔔</div>
+            <Bell className="empty-icon" size={32} strokeWidth={1.5} />
             <h4>No notifications</h4>
             <p>You're all caught up!</p>
           </div>
@@ -59,7 +60,7 @@ const NotificationsPanel = ({ notifications, markNotificationAsRead, deleteNotif
 
       <div className="notifications-footer">
         <button className="footer-button">
-          <span>⚙️</span>
+          <Settings size={18} strokeWidth={2} />
           Notification settings
         </button>
       </div>

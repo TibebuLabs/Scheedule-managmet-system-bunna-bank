@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Phone, Edit, Trash2, Eye, CheckCircle2, AlertCircle, X, User, Users, Search, Briefcase, Save } from 'lucide-react';
 import './StaffTable.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -50,7 +51,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         setStaffMembers(transformedStaff);
       }
     } catch (error) {
-      console.error('❌ Error fetching staff:', error);
+      console.error('Error fetching staff:', error);
       setStaffMembers([]);
     } finally {
       setLoading(false);
@@ -116,7 +117,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
       });
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('❌ Error updating staff:', error);
+      console.error('Error updating staff:', error);
       if (error.response?.data?.message) {
         setModalContent({
           title: 'Update Failed',
@@ -197,7 +198,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         });
         setShowSuccessModal(true);
       } catch (error) {
-        console.error('❌ Error deleting staff:', error);
+        console.error('Error deleting staff:', error);
         setModalContent({
           title: 'Deletion Failed',
           message: 'Failed to delete staff member',
@@ -270,7 +271,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         <div className="modal-overlay">
           <div className="modal-content success" style={{ borderTop: '4px solid #10b981' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
-              <h3 style={{ color: '#3d1209' }}>✅ {modalContent.title}</h3>
+              <h3 style={{ color: '#3d1209' }}>
+                <CheckCircle2 size={20} strokeWidth={2} className="inline mr-2" />
+                {modalContent.title}
+              </h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
@@ -295,7 +299,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         <div className="modal-overlay">
           <div className="modal-content error" style={{ borderTop: '4px solid #dc2626' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
-              <h3 style={{ color: '#3d1209' }}>❌ {modalContent.title}</h3>
+              <h3 style={{ color: '#3d1209' }}>
+                <AlertCircle size={20} strokeWidth={2} className="inline mr-2" />
+                {modalContent.title}
+              </h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
@@ -320,7 +327,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         <div className="modal-overlay">
           <div className="modal-content warning" style={{ borderTop: '4px solid #f59e0b' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
-              <h3 style={{ color: '#3d1209' }}>⚠️ {modalContent.title}</h3>
+              <h3 style={{ color: '#3d1209' }}>Delete Staff Member</h3>
               <button className="modal-close" onClick={cancelDelete}>×</button>
             </div>
             <div className="modal-body">
@@ -352,7 +359,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
         <div className="modal-overlay">
           <div className="modal-content info" style={{ borderTop: '4px solid #3d1209' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #f0e9e5' }}>
-              <h3 style={{ color: '#3d1209' }}>👤 {modalContent.title}</h3>
+              <h3 style={{ color: '#3d1209' }}>
+                <User size={20} strokeWidth={2} className="inline mr-2" />
+                {modalContent.title}
+              </h3>
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
@@ -391,7 +401,10 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
 
       <div className="staff-header">
         <div className="header-content">
-          <h2 style={{ color: '#3d1209' }}>👥 Staff Members</h2>
+          <h2 style={{ color: '#3d1209' }}>
+            <Users size={24} strokeWidth={2} className="inline mr-2" />
+            Staff Members
+          </h2>
           <p style={{ color: '#5a1b0e' }}>Manage your team members and their details</p>
           <div className="total-stats" style={{ color: '#8b4513', backgroundColor: '#f0e9e5' }}>
             Total: {staffMembers.length} staff members
@@ -412,7 +425,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
 
       <div className="staff-filters">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon"><Search size={18} strokeWidth={2} /></span>
           <input
             type="text"
             placeholder="Search staff by name, email, role, or phone..."
@@ -545,7 +558,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                         />
                       ) : (
                         <div className="staff-role" style={{ color: '#5a1b0e' }}>
-                          <span className="role-icon">💼</span>
+                          <Briefcase size={15} strokeWidth={2} className="role-icon" style={{marginRight:'4px'}} />
                           {staff.role}
                         </div>
                       )}
@@ -579,7 +592,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                         />
                       ) : (
                         <div className="phone-number" style={{ color: '#5a1b0e' }}>
-                          <span className="phone-icon">📱</span>
+                          <Phone size={16} strokeWidth={2} className="inline mr-1" />
                           {formatPhoneNumber(staff.phone)}
                         </div>
                       )}
@@ -624,7 +637,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               onClick={() => handleSaveClick(staff.id)}
                               style={{ backgroundColor: '#10b98120', color: '#059669' }}
                             >
-                              <span>💾</span>
+                              <Save size={16} strokeWidth={2} />
                             </button>
                             <button 
                               className="action-button cancel" 
@@ -632,7 +645,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               onClick={handleCancelClick}
                               style={{ backgroundColor: '#ef444420', color: '#dc2626' }}
                             >
-                              <span>❌</span>
+                              <X size={16} strokeWidth={2} />
                             </button>
                           </>
                         ) : (
@@ -643,7 +656,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               onClick={() => handleEditClick(staff)}
                               style={{ backgroundColor: '#3d120920', color: '#3d1209' }}
                             >
-                              <span>✏️</span>
+                              <Edit size={16} strokeWidth={2} />
                             </button>
                             <button 
                               className="action-button delete" 
@@ -651,7 +664,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               onClick={() => handleDeleteClick(staff.id, `${staff.firstName} ${staff.lastName}`)}
                               style={{ backgroundColor: '#ef444420', color: '#dc2626' }}
                             >
-                              <span>🗑️</span>
+                              <Trash2 size={16} strokeWidth={2} />
                             </button>
                             <button 
                               className="action-button view" 
@@ -659,7 +672,7 @@ const StaffTable = ({ onAddStaff, darkMode, refreshTrigger }) => {
                               onClick={() => handleViewDetails(staff)}
                               style={{ backgroundColor: '#3d120920', color: '#3d1209' }}
                             >
-                              <span>👁️</span>
+                              <Eye size={16} strokeWidth={2} />
                             </button>
                           </>
                         )}

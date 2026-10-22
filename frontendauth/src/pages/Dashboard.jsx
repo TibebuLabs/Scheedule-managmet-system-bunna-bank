@@ -12,6 +12,8 @@ import ScheduleTable from '../components/Schedule/ScheduleTable';
 import ProfilePage from '../components/Header/ProfilePage';
 import SettingsPage from '../components/Header/SettingsPage';
 import PrivacyPage from '../components/Header/PrivacyPage';
+import EmailServiceWarning from '../components/EmailServiceWarning';
+import MobileBottomNav from '../components/Navigation/MobileBottomNav';
 import {
   FaBell,
   FaChartLine,
@@ -99,11 +101,11 @@ const Dashboard = () => {
   ]);
 
   const [notifications, setNotifications] = useState([
-    { id:1, title:'Quarterly Shift Rotations', message:'Branch manager updated the schedule for next week', time:'10 min ago', read:false, icon:'📋', color:'bg-amber-100 text-amber-700' },
-    { id:2, title:'Executive Committee Meeting', message:'Regional branch meeting starts at 2:00 PM today', time:'1 hour ago', read:false, icon:'👥', color:'bg-blue-100 text-blue-700' },
-    { id:3, title:'Teller Shift Swapped', message:'Sarah Williams accepted the morning shift coverage', time:'3 hours ago', read:true, icon:'🔄', color:'bg-emerald-100 text-emerald-700' },
-    { id:4, title:'New Staff Onboarded', message:'Abebe Kebede added to Customer Operations', time:'5 hours ago', read:true, icon:'👤', color:'bg-purple-100 text-purple-700' },
-    { id:5, title:'System Security Backup', message:'Core banking synchronization finished successfully', time:'7 hours ago', read:true, icon:'🛡️', color:'bg-slate-100 text-slate-700' },
+    { id:1, title:'Quarterly Shift Rotations', message:'Branch manager updated the schedule for next week', time:'10 min ago', read:false, icon:'Clipboard', color:'bg-amber-100 text-amber-700' },
+    { id:2, title:'Executive Committee Meeting', message:'Regional branch meeting starts at 2:00 PM today', time:'1 hour ago', read:false, icon:'Users', color:'bg-blue-100 text-blue-700' },
+    { id:3, title:'Teller Shift Swapped', message:'Sarah Williams accepted the morning shift coverage', time:'3 hours ago', read:true, icon:'RotateCcw', color:'bg-emerald-100 text-emerald-700' },
+    { id:4, title:'New Staff Onboarded', message:'Abebe Kebede added to Customer Operations', time:'5 hours ago', read:true, icon:'User', color:'bg-purple-100 text-purple-700' },
+    { id:5, title:'System Security Backup', message:'Core banking synchronization finished successfully', time:'7 hours ago', read:true, icon:'Shield', color:'bg-slate-100 text-slate-700' },
   ]);
 
   useEffect(() => {
@@ -145,6 +147,9 @@ const Dashboard = () => {
       case 'dashboard':
         return (
           <div className="space-y-6">
+            {/* ================= EMAIL SERVICE WARNING ================= */}
+            <EmailServiceWarning />
+
             {/* ================= 1. WELCOME BANNER ================= */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#3d1209] via-[#4d170c] to-[#250904] p-7 md:p-9 text-white shadow-xl shadow-[#3d1209]/15 border border-[#3d1209]/20">
               {/* Subtle background graphics */}
@@ -738,7 +743,7 @@ const Dashboard = () => {
           setMobileMenuOpen={setMobileMenuOpen}
         />
 
-        <main className="p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-68px)]">
+        <main className="p-4 sm:p-6 lg:p-8 pb-[72px] md:pb-0 min-h-[calc(100vh-68px)]">
           <div className="max-w-7xl mx-auto animate-fade-in">
             {renderContent()}
           </div>
@@ -746,30 +751,7 @@ const Dashboard = () => {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2.5 px-4 flex justify-around z-50 shadow-2xl">
-          {[
-            { id: 'dashboard', icon: '🏠', label: 'Home' },
-            { id: 'staff', icon: '👥', label: 'Staff' },
-            { id: 'task', icon: '✅', label: 'Tasks' },
-            { id: 'TaskSchedule', icon: '📅', label: 'Schedule' },
-          ].map(({ id, icon, label }) => (
-            <button
-              key={id}
-              onClick={() => setActiveMenu(id)}
-              className={`flex flex-col items-center p-1.5 rounded-xl transition-all ${
-                activeMenu === id
-                  ? 'text-[#3d1209] font-bold scale-105'
-                  : 'text-slate-500 font-medium'
-              }`}
-            >
-              <span className="text-xl leading-none">{icon}</span>
-              <span className="text-[11px] mt-1">{label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {isMobile && <div className="h-16" />}
+      {isMobile && <MobileBottomNav activeMenu={activeMenu} setActiveMenu={setActiveMenu} />}
     </div>
   );
 };

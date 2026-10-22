@@ -152,6 +152,34 @@ class EmailController {
       });
     }
   }
+
+  // 📧 Get email service status for dashboard
+  async getStatus(req, res) {
+    try {
+      const status = emailService.getEmailStatus();
+      
+      res.status(200).json({
+        success: true,
+        enabled: status.enabled,
+        configured: status.configured,
+        message: status.enabled 
+          ? 'Email service is operational' 
+          : 'Email service is disabled - staff will not receive notifications',
+        code: status.enabled ? 'EMAIL_ENABLED' : 'EMAIL_DISABLED',
+        stats: status.stats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Error getting email status:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get email status',
+        code: 'EMAIL_STATUS_ERROR',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 }
 
 module.exports = new EmailController();

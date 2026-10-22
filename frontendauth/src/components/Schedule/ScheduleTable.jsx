@@ -285,23 +285,40 @@ const ScheduleTable = ({ refreshTrigger }) => {
 
   const getStatusConfig = (status) => {
     const configs = {
-      'scheduled': { color: 'bg-blue-100 text-blue-700', icon: '📋', label: 'Scheduled' },
-      'in progress': { color: 'bg-amber-100 text-amber-700', icon: '⚡', label: 'In Progress' },
-      'completed': { color: 'bg-green-100 text-green-700', icon: '✅', label: 'Completed' },
-      'cancelled': { color: 'bg-red-100 text-red-700', icon: '❌', label: 'Cancelled' },
-      'pending': { color: 'bg-purple-100 text-purple-700', icon: '⏳', label: 'Pending' }
+      'scheduled': { color: 'bg-blue-100 text-blue-700', icon: 'Clipboard', label: 'Scheduled' },
+      'in progress': { color: 'bg-amber-100 text-amber-700', icon: 'Zap', label: 'In Progress' },
+      'completed': { color: 'bg-green-100 text-green-700', icon: 'CheckSquare', label: 'Completed' },
+      'cancelled': { color: 'bg-red-100 text-red-700', icon: 'X', label: 'Cancelled' },
+      'pending': { color: 'bg-purple-100 text-purple-700', icon: 'Clock', label: 'Pending' }
     };
     return configs[status?.toLowerCase()] || configs.scheduled;
   };
 
   const getPriorityConfig = (priority) => {
     const configs = {
-      'urgent': { color: 'bg-red-100 text-red-700', icon: '🚨', label: 'Urgent' },
-      'high': { color: 'bg-orange-100 text-orange-700', icon: '🔥', label: 'High' },
-      'medium': { color: 'bg-blue-100 text-blue-700', icon: '⚡', label: 'Medium' },
-      'low': { color: 'bg-green-100 text-green-700', icon: '🐌', label: 'Low' }
+      'urgent': { color: 'bg-red-100 text-red-700', icon: 'AlertCircle', label: 'Urgent' },
+      'high': { color: 'bg-orange-100 text-orange-700', icon: 'TrendingUp', label: 'High' },
+      'medium': { color: 'bg-blue-100 text-blue-700', icon: 'Zap', label: 'Medium' },
+      'low': { color: 'bg-green-100 text-green-700', icon: 'BarChart3', label: 'Low' }
     };
     return configs[priority?.toLowerCase()] || configs.medium;
+  };
+
+  const iconMap = {
+    'Clipboard': Clipboard,
+    'Zap': Zap,
+    'CheckSquare': CheckSquare,
+    'X': X,
+    'Clock': Clock,
+    'AlertCircle': AlertCircle,
+    'TrendingUp': TrendingUp,
+    'BarChart3': BarChart3
+  };
+
+  const renderIcon = (iconName) => {
+    const IconComponent = iconMap[iconName];
+    if (!IconComponent) return null;
+    return <IconComponent size={16} strokeWidth={2} className="inline mr-1" />;
   };
 
   const getAvatarColor = (id) => {
@@ -855,7 +872,7 @@ const ScheduleTable = ({ refreshTrigger }) => {
                               </select>
                             ) : (
                               <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${priorityConfig.color}`}>
-                                <span>{priorityConfig.icon}</span>
+                                {renderIcon(priorityConfig.icon)}
                                 {priorityConfig.label}
                               </span>
                             )}

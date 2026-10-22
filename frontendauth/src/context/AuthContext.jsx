@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import authService from '../services/auth.service';
 import toast from 'react-hot-toast';
+import { Smile } from 'lucide-react';
 
 const AuthContext = createContext({});
 
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       // Update localStorage with normalized user
       localStorage.setItem('user', JSON.stringify(normalizedUser));
       
-      toast.success('Registration successful! Welcome aboard! 🎉');
+      toast.success('Registration successful! Welcome aboard!');
       return { ...response, user: normalizedUser };
     } catch (error) {
       // Don't show toast here - API interceptor already handled it
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }) => {
       // Update localStorage with normalized user
       localStorage.setItem('user', JSON.stringify(normalizedUser));
       
-      toast.success(`Welcome back, ${normalizedUser.firstName}! 👋`);
+      toast.success(<span style={{display:'inline-flex',alignItems:'center',gap:'6px'}}>Welcome back, {normalizedUser.firstName}! <Smile size={16} /></span>);
       return { ...response, user: normalizedUser };
     } catch (error) {
       // Don't show toast here - API interceptor already handled it
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     authService.logout();
     setUser(null);
-    toast.success('Logged out successfully. See you soon! 👋');
+    toast.success(<span style={{display:'inline-flex',alignItems:'center',gap:'6px'}}>Logged out successfully. See you soon! <Smile size={16} /></span>);
   };
 
   const value = {

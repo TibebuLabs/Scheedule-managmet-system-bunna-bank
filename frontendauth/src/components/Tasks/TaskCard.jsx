@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Clipboard, Trash2, AlertTriangle, Calendar, RotateCcw, Eye, Edit, Clock, CheckCircle2, X, Search, Check } from 'lucide-react';
 import './TaskTable.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -125,7 +126,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/tasks`);
       
-      console.log('📥 Tasks API Response:', response.data);
+      console.log('Tasks API Response:', response.data);
       
       if (response.data.success) {
         // Transform backend data to match frontend structure
@@ -139,13 +140,13 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
           updatedAt: task.updatedAt
         }));
         
-        console.log('✅ Transformed tasks:', transformedTasks);
+        console.log('Transformed tasks:', transformedTasks);
         setTasks(transformedTasks);
       }
     } catch (error) {
-      console.error('❌ Error fetching tasks:', error);
+      console.error('Error fetching tasks:', error);
       if (error.code === 'ERR_NETWORK') {
-        console.log('⚠️ Using sample data for development');
+        console.log('Using sample data for development');
         setTasks([
           {
             id: '1',
@@ -207,7 +208,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         status: editFormData.status || 'pending'
       };
 
-      console.log('📤 Updating task:', taskId, updateData);
+      console.log('Updating task:', taskId, updateData);
       const response = await axios.put(`${API_BASE_URL}/tasks/${taskId}`, updateData);
       
       if (response.data.success) {
@@ -226,13 +227,13 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         
         const updatedTask = tasks.find(t => t.id === taskId);
         showSuccessMessage(
-          'Task Updated! 🎉',
+          'Task Updated!',
           'Your task has been successfully updated.',
           { ...updatedTask, ...updateData }
         );
       }
     } catch (error) {
-      console.error('❌ Error updating task:', error);
+      console.error('Error updating task:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have been deleted.');
         fetchTasks();
@@ -275,12 +276,12 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
       if (response.data.success) {
         setTasks(prev => prev.filter(task => task.id !== taskId));
         showSuccessMessage(
-          'Task Deleted! 🗑️',
+          'Task Deleted Successfully',
           `Task "${taskTitle}" has been successfully deleted.`
         );
       }
     } catch (error) {
-      console.error('❌ Error deleting task:', error);
+      console.error('Error deleting task:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have already been deleted.');
         fetchTasks();
@@ -308,7 +309,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         status: newStatus
       };
 
-      console.log('📤 Updating task status:', taskId, newStatus);
+      console.log('Updating task status:', taskId, newStatus);
       const response = await axios.put(`${API_BASE_URL}/tasks/${taskId}`, updateData);
       
       if (response.data.success) {
@@ -323,12 +324,12 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
         ));
         
         showSuccessMessage(
-          'Status Updated! 🔄',
+          'Status Updated Successfully',
           `Task status updated to ${getDisplayStatus(newStatus)}!`
         );
       }
     } catch (error) {
-      console.error('❌ Error updating task status:', error);
+      console.error('Error updating task status:', error);
       if (error.response?.status === 404) {
         showErrorMessage('Task Not Found', 'Task not found. It may have been deleted.');
         fetchTasks();
@@ -364,7 +365,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
   };
 
   const getPriorityEmoji = () => {
-    return '📋';
+    return <Clipboard size={16} strokeWidth={2} />;
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -383,7 +384,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="modal-overlay" onClick={() => setShowSuccessModal(false)}>
       <div className="modal-content success-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-icon success-icon">🎉</div>
+          <CheckCircle2 className="modal-icon success-icon" size={32} strokeWidth={2} />
           <h3 className="modal-title">{modalContent.title}</h3>
           <button className="modal-close" onClick={() => setShowSuccessModal(false)}>×</button>
         </div>
@@ -431,7 +432,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
       <div className="modal-content error-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-icon error-icon">❌</div>
+          <AlertTriangle className="modal-icon error-icon" size={32} strokeWidth={2} />
           <h3 className="modal-title">{modalContent.title}</h3>
           <button className="modal-close" onClick={() => setShowErrorModal(false)}>×</button>
         </div>
@@ -463,7 +464,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
       <div className="modal-content confirm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-icon confirm-icon">⚠️</div>
+          <AlertTriangle className="modal-icon confirm-icon" size={32} strokeWidth={2} />
           <h3 className="modal-title">{modalContent.title}</h3>
           <button className="modal-close" onClick={() => setShowConfirmModal(false)}>×</button>
         </div>
@@ -497,7 +498,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="modal-overlay" onClick={() => setShowDeleteConfirmModal(false)}>
       <div className="modal-content delete-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-icon delete-icon">🗑️</div>
+          <Trash2 className="modal-icon delete-icon" size={32} strokeWidth={2} />
           <h3 className="modal-title">Delete Task</h3>
           <button className="modal-close" onClick={() => setShowDeleteConfirmModal(false)}>×</button>
         </div>
@@ -516,7 +517,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                 <p className="task-to-delete-description">{modalContent.taskData.description}</p>
               )}
               <div className="deletion-warning">
-                <span className="warning-icon">⚠️</span>
+                <AlertTriangle className="warning-icon" size={18} strokeWidth={2} />
                 <small>This action cannot be undone.</small>
               </div>
             </div>
@@ -555,7 +556,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
       <div className="modal-content details-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-icon details-icon">📋</div>
+          <Clipboard className="modal-icon details-icon" size={32} strokeWidth={2} />
           <h3 className="modal-title">Task Details</h3>
           <button className="modal-close" onClick={() => setShowDetailsModal(false)}>×</button>
         </div>
@@ -592,7 +593,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                 <div className="detail-section">
                   <label>Created</label>
                   <div className="detail-value">
-                    <span className="date-icon">📅</span>
+                    <Calendar className="date-icon" size={16} strokeWidth={2} />
                     {formatDate(modalContent.taskData.createdAt)}
                   </div>
                 </div>
@@ -600,7 +601,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                 <div className="detail-section">
                   <label>Last Updated</label>
                   <div className="detail-value">
-                    <span className="date-icon">🔄</span>
+                    <RotateCcw className="date-icon" size={16} strokeWidth={2} />
                     {formatDate(modalContent.taskData.updatedAt)}
                   </div>
                 </div>
@@ -653,7 +654,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
     <div className="task-management">
       <div className="task-header">
         <div className="header-content">
-          <h2>📋 Tasks</h2>
+          <h2><Clipboard className="header-icon" size={28} strokeWidth={2} /> Tasks</h2>
           <p>Manage and organize your team's tasks</p>
           <div className="task-stats">
             <div className="stat">
@@ -682,7 +683,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
 
       <div className="task-filters">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <Search className="search-icon" size={18} strokeWidth={2} />
           <input
             type="text"
             placeholder="Search tasks by title, description, or code..."
@@ -692,7 +693,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
           />
           {searchQuery && (
             <button className="clear-search" onClick={() => setSearchQuery('')}>
-              ✕
+              <X size={18} strokeWidth={2} />
             </button>
           )}
         </div>
@@ -725,7 +726,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                 <tr>
                   <td colSpan="4" className="no-data">
                     <div className="empty-state">
-                      <span className="empty-icon">📋</span>
+                      <Clipboard className="empty-icon" size={48} strokeWidth={1.5} />
                       <p>{searchQuery ? 'No tasks found matching your search' : 'No tasks created yet'}</p>
                       {searchQuery && (
                         <button onClick={() => setSearchQuery('')} className="clear-search-btn">
@@ -771,7 +772,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                             <span className="task-date">Created {formatDate(task.createdAt)}</span>
                             {task.updatedAt !== task.createdAt && (
                               <span className="task-updated">
-                                🔄 Updated {formatDate(task.updatedAt)}
+                                <RotateCcw size={12} strokeWidth={2} className="inline mr-1" /> Updated {formatDate(task.updatedAt)}
                               </span>
                             )}
                           </div>
@@ -838,7 +839,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Mark as Completed"
                               disabled={task.status === 'completed'}
                             >
-                              ✓
+                              <Check size={16} strokeWidth={2} />
                             </button>
                             <button
                               className="quick-status-btn cancelled"
@@ -846,7 +847,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Mark as Cancelled"
                               disabled={task.status === 'cancelled'}
                             >
-                              ✕
+                              <X size={16} strokeWidth={2} />
                             </button>
                           </div>
                         </div>
@@ -862,14 +863,14 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Save Changes"
                               onClick={() => handleSaveClick(task.id)}
                             >
-                              <span>💾</span>
+                              <CheckCircle2 size={18} strokeWidth={2} />
                             </button>
                             <button 
                               className="action-button cancel" 
                               title="Cancel"
                               onClick={handleCancelClick}
                             >
-                              <span>❌</span>
+                              <X size={18} strokeWidth={2} />
                             </button>
                           </>
                         ) : (
@@ -879,7 +880,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               title="Edit Task"
                               onClick={() => handleEditClick(task)}
                             >
-                              <span>✏️</span>
+                              <Edit size={18} strokeWidth={2} />
                             </button>
                             <button 
                               className="action-button delete" 
@@ -887,16 +888,18 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                               onClick={() => showDeleteConfirmation(task)}
                               disabled={isDeleting === task.id}
                             >
-                              <span>
-                                {isDeleting === task.id ? '⏳' : '🗑️'}
-                              </span>
+                              {isDeleting === task.id ? (
+                                <Clock size={18} strokeWidth={2} />
+                              ) : (
+                                <Trash2 size={18} strokeWidth={2} />
+                              )}
                             </button>
                             <button 
                               className="action-button view" 
                               title="View Details"
                               onClick={() => showTaskDetails(task)}
                             >
-                              <span>👁️</span>
+                              <Eye size={18} strokeWidth={2} />
                             </button>
                             {task.status !== 'completed' && (
                               <button 
@@ -904,7 +907,7 @@ const TaskTable = ({ onAddTask = () => {}, darkMode = false, refreshTrigger }) =
                                 title="Mark as Complete"
                                 onClick={() => handleStatusChange(task.id, 'completed')}
                               >
-                                <span>✅</span>
+                                <CheckCircle2 size={18} strokeWidth={2} />
                               </button>
                             )}
                           </>

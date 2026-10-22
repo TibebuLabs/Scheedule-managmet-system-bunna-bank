@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { AlertCircle, BarChart2, Shield, Clock, Mail, Calendar, Users, Clipboard, X, CheckCircle, FileText, PenTool } from 'lucide-react';
 import './TaskSchedule.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -174,7 +175,7 @@ const TaskSchedule = ({ onClose }) => {
         setStaffWeeklyLoad(loadMap);
       }
     } catch (error) {
-      console.error('❌ Error fetching staff:', error);
+      console.error('Error fetching staff:', error);
       setAutoDismissError('Failed to load staff data');
     }
   };
@@ -191,7 +192,7 @@ const TaskSchedule = ({ onClose }) => {
         })));
       }
     } catch (error) {
-      console.error('❌ Error fetching tasks:', error);
+      console.error('Error fetching tasks:', error);
       setAutoDismissError('Failed to load tasks');
     }
   };
@@ -325,9 +326,9 @@ const TaskSchedule = ({ onClose }) => {
       setAutoDismissError(`Found ${errors.length} weekly limit violation(s)`);
     } else {
       if (formData.scheduleType === 'weekly') {
-        setAutoDismissSuccess('✅ All weekly limits are satisfied');
+        setAutoDismissSuccess('All weekly limits are satisfied');
       } else {
-        setAutoDismissSuccess('✅ Daily schedule - no weekly restrictions apply');
+        setAutoDismissSuccess('Daily schedule - no weekly restrictions apply');
       }
     }
     
@@ -365,7 +366,7 @@ const TaskSchedule = ({ onClose }) => {
       weekNumber: getWeekNumber(new Date(scheduleDate))
     });
     
-    setAutoDismissSuccess('✅ Email preview generated successfully');
+    setAutoDismissSuccess('Email preview generated successfully');
   };
 
   // Handle form submission - FIXED VERSION
@@ -454,26 +455,26 @@ const TaskSchedule = ({ onClose }) => {
         scheduleData.endDate = endDate.toISOString();
       }
 
-      console.log('📤 Submitting schedule:', scheduleData);
+      console.log('Submitting schedule:', scheduleData);
 
       const response = await axios.post(`${API_BASE_URL}/schedules`, scheduleData);
       
       if (response.data.success) {
         const schedule = response.data.data?.schedule;
-        let successMessage = `✅ ${formData.scheduleType === 'daily' ? 'Daily' : 'Weekly'} schedule created successfully! ID: ${schedule?.scheduleId || 'N/A'}`;
+        let successMessage = `${formData.scheduleType === 'daily' ? 'Daily' : 'Weekly'} schedule created successfully! ID: ${schedule?.scheduleId || 'N/A'}`;
         
         // Show detailed success message
         if (formData.sendEmail) {
           const notifications = response.data.data?.notifications || [];
           const sentCount = notifications.filter(n => n.success).length;
           if (sentCount > 0) {
-            successMessage += ` 📧 ${sentCount} email notification(s) sent!`;
+            successMessage += ` ${sentCount} email notification(s) sent!`;
           }
         }
         
         // Show schedule type specific message
         if (formData.scheduleType === 'weekly') {
-          successMessage += ' 🛡️ Weekly limits enforced.';
+          successMessage += ' Weekly limits enforced.';
         }
         
         setAutoDismissSuccess(successMessage);
@@ -486,7 +487,7 @@ const TaskSchedule = ({ onClose }) => {
       }
 
     } catch (error) {
-      console.error('❌ Schedule creation error:', error.response?.data || error);
+      console.error('Schedule creation error:', error.response?.data || error);
       
       // Handle different error types
       let errorMessage = 'Failed to create schedule. Please try again.';
@@ -587,7 +588,7 @@ const TaskSchedule = ({ onClose }) => {
       {/* Header */}
       <div className="schedule-header">
         <div className="header-content">
-          <h2>📅 Schedule Tasks</h2>
+          <h2>Schedule Tasks</h2>
           <div className="header-stats">
             <div className="stat">
               <span className="stat-number">{localStaff.length}</span>
@@ -613,15 +614,15 @@ const TaskSchedule = ({ onClose }) => {
       {formData.scheduleType === 'weekly' && (
         <div className="restrictions-banner">
           <div className="restriction-item">
-            <span className="restriction-icon">🛡️</span>
+            <Shield size={16} strokeWidth={2} className="restriction-icon" />
             <span className="restriction-text">1 task/week per staff</span>
           </div>
           <div className="restriction-item">
-            <span className="restriction-icon">⏰</span>
+            <Clock size={16} strokeWidth={2} className="restriction-icon" />
             <span className="restriction-text">No similar tasks in consecutive weeks</span>
           </div>
           <div className="restriction-item">
-            <span className="restriction-icon">📧</span>
+            <Mail size={16} strokeWidth={2} className="restriction-icon" />
             <span className="restriction-text">Email notifications enabled</span>
           </div>
         </div>
@@ -631,11 +632,11 @@ const TaskSchedule = ({ onClose }) => {
       {formData.scheduleType === 'daily' && (
         <div className="restrictions-banner daily-banner">
           <div className="restriction-item">
-            <span className="restriction-icon">📅</span>
+            <Calendar size={16} strokeWidth={2} className="restriction-icon" />
             <span className="restriction-text">Single day assignment</span>
           </div>
           <div className="restriction-item">
-            <span className="restriction-icon">📧</span>
+            <Mail size={16} strokeWidth={2} className="restriction-icon" />
             <span className="restriction-text">Email notifications enabled</span>
           </div>
         </div>
@@ -647,14 +648,14 @@ const TaskSchedule = ({ onClose }) => {
           {/* Schedule Settings */}
           <div className="form-section">
             <div className="section-header">
-              <h3>📋 Schedule Settings</h3>
+              <h3>Schedule Settings</h3>
               <div className="section-line"></div>
             </div>
 
             {/* Schedule Type */}
             <div className="form-group">
               <label>
-                <span className="label-icon">🕐</span>
+                <Clock size={14} strokeWidth={2} className="label-icon" />
                 Schedule Type
               </label>
               <div className="type-buttons">
@@ -667,7 +668,7 @@ const TaskSchedule = ({ onClose }) => {
                     setError('');
                   }}
                 >
-                  <span className="button-icon">📅</span>
+                  <Calendar size={16} strokeWidth={2} className="button-icon" />
                   <span>Daily Schedule</span>
                   <span className="button-desc">Single day assignment</span>
                 </button>
@@ -680,7 +681,7 @@ const TaskSchedule = ({ onClose }) => {
                     setError('');
                   }}
                 >
-                  <span className="button-icon">📆</span>
+                  <Calendar size={16} strokeWidth={2} className="button-icon" />
                   <span>Weekly Schedule</span>
                   <span className="button-desc">Week-long with restrictions</span>
                 </button>
@@ -691,7 +692,7 @@ const TaskSchedule = ({ onClose }) => {
             {formData.scheduleType === 'daily' ? (
               <div className="form-group">
                 <label>
-                  <span className="label-icon">📅</span>
+                  <Calendar size={14} strokeWidth={2} className="label-icon" />
                   Select Date
                 </label>
                 <input
@@ -711,7 +712,7 @@ const TaskSchedule = ({ onClose }) => {
               <div className="form-row">
                 <div className="form-group">
                   <label>
-                    <span className="label-icon">📅</span>
+                    <Calendar size={14} strokeWidth={2} className="label-icon" />
                     Start Date
                   </label>
                   <input
@@ -724,7 +725,7 @@ const TaskSchedule = ({ onClose }) => {
                 </div>
                 <div className="form-group">
                   <label>
-                    <span className="label-icon">📅</span>
+                    <Calendar size={14} strokeWidth={2} className="label-icon" />
                     End Date
                   </label>
                   <input
@@ -754,7 +755,7 @@ const TaskSchedule = ({ onClose }) => {
                   className="checkbox-input"
                 />
                 <label htmlFor="sendEmail" className="checkbox-label">
-                  <span className="checkbox-icon">📧</span>
+                  <Mail size={14} strokeWidth={2} className="checkbox-icon" />
                   <span>Send email notifications</span>
                   <span className="checkbox-description">
                     Staff will receive professional email with task details
@@ -767,7 +768,7 @@ const TaskSchedule = ({ onClose }) => {
           {/* Staff Selection */}
           <div className="form-section">
             <div className="section-header">
-              <h3>👥 Staff Assignment</h3>
+              <h3>Staff Assignment</h3>
               <div className="section-line"></div>
             </div>
 
@@ -803,7 +804,7 @@ const TaskSchedule = ({ onClose }) => {
 
             {localStaff.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">👥</span>
+                <Users size={32} strokeWidth={1.5} className="empty-icon" />
                 <p>No staff members available</p>
               </div>
             ) : (
@@ -824,7 +825,7 @@ const TaskSchedule = ({ onClose }) => {
                     >
                       <div className="staff-checkbox">
                         {isSelected && <div className="checkmark">✓</div>}
-                        {hasWeeklyLimit && <div className="limit-icon">⚠️</div>}
+                        {hasWeeklyLimit && <div className="limit-icon"><AlertCircle size={16} strokeWidth={2} /></div>}
                       </div>
                       <div 
                         className="staff-avatar"
@@ -837,7 +838,8 @@ const TaskSchedule = ({ onClose }) => {
                         <div className="staff-role">{staff.role}</div>
                         <div className="staff-department">{staff.department}</div>
                         <div className="weekly-load">
-                          📊 Week {currentWeekNumber}: {weeklyLoad.totalTasks} task(s), {weeklyLoad.totalHours}h
+                          <BarChart2 size={14} strokeWidth={2} className="inline mr-1" />
+                          Week {currentWeekNumber}: {weeklyLoad.totalTasks} task(s), {weeklyLoad.totalHours}h
                           {hasWeeklyLimit && <span className="limit-text"> (Weekly Limit Reached)</span>}
                         </div>
                       </div>
@@ -852,19 +854,19 @@ const TaskSchedule = ({ onClose }) => {
           {/* Task Selection */}
           <div className="form-section">
             <div className="section-header">
-              <h3>📝 Task Details</h3>
+              <h3><PenTool size={16} strokeWidth={2} style={{marginRight:'6px',verticalAlign:'middle'}} />Task Details</h3>
               <div className="section-line"></div>
             </div>
 
             {/* Task Selection */}
             <div className="form-group">
               <label>
-                <span className="label-icon">📋</span>
+                <Clipboard size={14} strokeWidth={2} className="label-icon" />
                 Select Task
               </label>
               {localTasks.length === 0 ? (
                 <div className="empty-state">
-                  <span className="empty-icon">📋</span>
+                  <Clipboard size={32} strokeWidth={1.5} className="empty-icon" />
                   <p>No tasks available</p>
                 </div>
               ) : (
@@ -902,7 +904,7 @@ const TaskSchedule = ({ onClose }) => {
             {/* Task Description */}
             <div className="form-group">
               <label>
-                <span className="label-icon">📄</span>
+                <FileText size={14} strokeWidth={2} className="label-icon" />
                 Task Description
               </label>
               <textarea
@@ -920,7 +922,7 @@ const TaskSchedule = ({ onClose }) => {
             {/* Notes Field */}
             <div className="form-group">
               <label>
-                <span className="label-icon">📝</span>
+                <PenTool size={14} strokeWidth={2} className="label-icon" />
                 Notes (Optional)
               </label>
               <textarea
@@ -938,7 +940,7 @@ const TaskSchedule = ({ onClose }) => {
         {/* Error Handling - with auto-dismiss */}
         {error && (
           <div className={`error-message ${weeklyLimitErrors.length > 0 ? 'with-limits' : ''}`}>
-            <span className="error-icon">❌</span>
+            <AlertCircle size={20} strokeWidth={2} className="error-icon" />
             <div className="error-content">
               <strong>Error:</strong> {error}
               
@@ -961,7 +963,7 @@ const TaskSchedule = ({ onClose }) => {
               onClick={dismissError}
               title="Dismiss error"
             >
-              ✕
+              <X size={16} strokeWidth={2} />
             </button>
           </div>
         )}
@@ -969,7 +971,7 @@ const TaskSchedule = ({ onClose }) => {
         {/* Success Message - with auto-dismiss */}
         {success && (
           <div className="success-message">
-            <span className="success-icon">✅</span>
+            <CheckCircle size={20} strokeWidth={2} className="success-icon" />
             <div className="success-content">
               <strong>Success!</strong> {success}
             </div>
@@ -979,7 +981,7 @@ const TaskSchedule = ({ onClose }) => {
               onClick={dismissSuccess}
               title="Dismiss success message"
             >
-              ✕
+              <X size={16} strokeWidth={2} />
             </button>
           </div>
         )}
@@ -988,7 +990,7 @@ const TaskSchedule = ({ onClose }) => {
         {emailPreview && (
           <div className="email-preview">
             <div className="preview-header">
-              <h4>📧 Email Preview</h4>
+              <h4><Mail size={16} strokeWidth={2} style={{marginRight:'6px',verticalAlign:'middle'}} />Email Preview</h4>
               <button
                 type="button"
                 className="close-preview"
@@ -999,7 +1001,7 @@ const TaskSchedule = ({ onClose }) => {
             </div>
             <div className="preview-content">
               <div className="preview-subject">
-                Subject: 📅 {emailPreview.scheduleType.toUpperCase()} Task Assignment: {emailPreview.taskTitle}
+                Subject: {emailPreview.scheduleType.toUpperCase()} Task Assignment: {emailPreview.taskTitle}
               </div>
               <div className="preview-recipients">
                 To: {emailPreview.staff.map(s => s.email).join(', ')}
@@ -1029,7 +1031,7 @@ const TaskSchedule = ({ onClose }) => {
               onClick={previewEmail}
               disabled={!formData.selectedTask || formData.selectedStaff.length === 0}
             >
-              <span className="preview-icon">📧</span>
+              <Mail size={16} strokeWidth={2} className="preview-icon" />
               Preview Email
             </button>
             {formData.scheduleType === 'weekly' && (
@@ -1039,7 +1041,7 @@ const TaskSchedule = ({ onClose }) => {
                 onClick={checkWeeklyLimits}
                 disabled={!formData.selectedTask || formData.selectedStaff.length === 0}
               >
-                <span className="preview-icon">🛡️</span>
+                <Shield size={16} strokeWidth={2} className="inline mr-1" />
                 Check Weekly Limits
               </button>
             )}
@@ -1066,7 +1068,7 @@ const TaskSchedule = ({ onClose }) => {
                 </>
               ) : (
                 <>
-                  <span className="submit-icon">📅</span>
+                  <Calendar size={16} strokeWidth={2} className="submit-icon" />
                   {formData.sendEmail ? 'Schedule & Send Emails' : 'Schedule Tasks'}
                 </>
               )}
@@ -1078,27 +1080,31 @@ const TaskSchedule = ({ onClose }) => {
         <div className="info-footer">
           <div className="info-item">
             <span className="info-icon">
-              {formData.scheduleType === 'daily' ? '📅' : '📆'}
+              {formData.scheduleType === 'daily' ? (
+                <Calendar size={16} strokeWidth={2} />
+              ) : (
+                <Calendar size={16} strokeWidth={2} />
+              )}
             </span>
             <span className="info-text">
               {formData.scheduleType === 'daily' ? 'Daily Schedule' : 'Weekly Schedule'}
             </span>
           </div>
           <div className="info-item">
-            <span className="info-icon">📧</span>
+            <Mail size={16} strokeWidth={2} className="info-icon" />
             <span className="info-text">
               {formData.sendEmail ? 'Email Enabled' : 'Email Disabled'}
             </span>
           </div>
           <div className="info-item">
-            <span className="info-icon">👥</span>
+            <Users size={16} strokeWidth={2} className="info-icon" />
             <span className="info-text">
               {formData.selectedStaff.length} Staff Selected
             </span>
           </div>
           {formData.scheduleType === 'weekly' && (
             <div className="info-item">
-              <span className="info-icon">🛡️</span>
+              <Shield size={16} strokeWidth={2} className="info-icon" />
               <span className="info-text">Weekly Limits Enforced</span>
             </div>
           )}
